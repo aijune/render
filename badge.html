@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="lib/bootstrap/bootstrap.css">
+</head>
+<body>
+    <script src="lib/require/require.config.js"></script>
+    <script src="lib/require/require.js" data-main="main"></script>
+    <script>
+
+        require(["jquery", "render", "bootstrap"], function ($) {
+
+            $("<h1>")
+                .prependTo("body")
+                .render(function(){
+                    return ["h1", [
+                        ["span", "Example heading "],
+                        ["span.badge.badge-secondary", "New"]
+                    ]];
+                });
+
+            $("<button>")
+                .prependTo("body")
+                .render(function(){
+                    return ["button.btn.btn-primary", {type: "button"}, [
+                        ["span", "Notifications "],
+                        ["span.badge.badge-light", "4"]
+                    ]];
+                });
+
+            $("<span>")
+                .prependTo("body")
+                .render(function(){
+                    return ["span.badge.badge-primary", "Primary"];
+                });
+
+            $("<span>")
+                .prependTo("body")
+                .render(function(){
+                    return ["span.badge.badge-pill.badge-primary", "Primary"];
+                });
+
+            $("<a>")
+                .prependTo("body")
+                .render(function(){
+                    return ["a.badge.badge-primary", {href: "#"}, "Primary"];
+                });
+
+        });
+
+    </script>
+</body>
+</html>

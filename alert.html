@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="lib/bootstrap/bootstrap.css">
+</head>
+<body>
+    <script src="lib/require/require.config.js"></script>
+    <script src="lib/require/require.js" data-main="main"></script>
+    <script>
+
+        require(["jquery", "render", "bootstrap"], function ($) {
+
+            $("<div>")
+                .prependTo("body")
+                .render(function(){
+                    return ["div.alert.alert-primary", {role: "alert"}, "A simple primary alert—check it out!"];
+                });
+
+            $("<div>")
+                .prependTo("body")
+                .render(function(){
+                    return ["div.alert.alert-primary", {role: "alert"}, [
+                       ["span", "A simple primary alert with "],
+                       ["a", {href: "#", class: "alert-link"}, "an example link"],
+                       ["span", ". Give it a click if you like."]
+                    ]];
+                });
+
+            $("<div>")
+                .prependTo("body")
+                .render(function(){
+                    return ["div.alert.alert-success", {role: "alert"}, [
+                        ["h4.alert-heading", "Well done!"],
+                        ["p", "Aww yeah, you successfully read this important alert message."],
+                        ["hr"],
+                        ["p.mb-0", "Whenever you need to, be sure to use margin utilities to keep things nice and tidy."]
+                    ]];
+                });
+
+            $("<div>")
+                .prependTo("body")
+                .render(function(d, r){
+                    return ["div.alert.alert-warning.alert-dismissible.fade.show", {role: "alert"}, [
+                        ["strong", "Holy guacamole!"],
+                        ["span", "You should check in on some of those fields below."],
+                        ["button", {
+                            type: "button",
+                            class: "close",
+                            "aria-label": "Close",
+                            onclick: r.c.alert.close
+                        }, [
+                            ["span", {"aria-hidden": true}, "&times;"]
+                        ]]
+                    ]];
+                });
+        });
+
+    </script>
+</body>
+</html>

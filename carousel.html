@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="lib/bootstrap/bootstrap.css">
+</head>
+<body>
+    <script src="lib/require/require.config.js"></script>
+    <script src="lib/require/require.js" data-main="main"></script>
+    <script>
+
+        require(["jquery", "render", "bootstrap"], function ($) {
+
+            $("<div>")
+                .prependTo("body")
+                .render(function(d){
+                    return ["div.carousel.slide", {dataRide: "carousel"}, [
+                        ["div.carousel-inner", [
+                            ["div.carousel-item", [
+                                ["img.d-block.w-100", {src: "img/carousel1.png"}]
+                            ]],
+                            ["div.carousel-item.active", [
+                                ["img.d-block.w-100", {src: "img/carousel2.png"}]
+                            ]],
+                            ["div.carousel-item", [
+                                ["img.d-block.w-100", {src: "img/carousel3.png"}]
+                            ]]
+                        ]]
+                    ]];
+                });
+
+            $("<div>")
+                .prependTo("body")
+                .render(function(d, r){
+                    return ["div.carousel.slide", {dataRide: "carousel"}, [
+                        ["div.carousel-inner", [
+                            ["div.carousel-item", [
+                                ["img.d-block.w-100", {src: "img/carousel1.png"}]
+                            ]],
+                            ["div.carousel-item.active", [
+                                ["img.d-block.w-100", {src: "img/carousel2.png"}]
+                            ]],
+                            ["div.carousel-item", [
+                                ["img.d-block.w-100", {src: "img/carousel3.png"}]
+                            ]]
+                        ]],
+                        ["a.carousel-control-prev", {href: "#", "data-slide": "prev", onclick: r.c.carousel.prev}, [
+                            ["span.carousel-control-prev-icon"]
+                        ]],
+                        ["a.carousel-control-next", {href: "#", "data-slide": "next", onclick: r.c.carousel.next}, [
+                            ["span.carousel-control-next-icon"]
+                        ]]
+                    ]];
+                });
+
+
+
+
+/*            var guideCode = `
+        $(demo).fragment(function(){
+
+        });
+    `;
+
+            var indicatorCode = `
+        $(demo).fragment(function(){
+            return ["div.carousel.slide", {dataRide: "carousel"}, [
+                ["ol.carousel-indicators", [
+                    ["li.active", {dataSlideTo: 0}],
+                    ["li", {dataSlideTo: 1}],
+                    ["li", {dataSlideTo: 2}]
+                ]],
+                ["div.carousel-inner", [
+                    ["div.carousel-item.active", [
+                        ["img.d-block.w-100", {src: "/img/carousel1.png"}]
+                    ]],
+                    ["div.carousel-item", [
+                        ["img.d-block.w-100", {src: "/img/carousel2.png"}]
+                    ]],
+                    ["div.carousel-item", [
+                        ["img.d-block.w-100", {src: "/img/carousel3.png"}]
+                    ]]
+                ]],
+                ["a.carousel-control-prev", {href: "#", dataSlide: "prev"}, [
+                    ["span.carousel-control-prev-icon"]
+                ]],
+                ["a.carousel-control-next", {href: "#", dataSlide: "next"}, [
+                    ["span.carousel-control-next-icon"]
+                ]]
+            ]];
+        });
+    `;
+
+            var captionCode = `
+        $(demo).fragment(function(){
+            return ["div.carousel.slide", {dataRide: "carousel"}, [
+                ["ol.carousel-indicators", [
+                    ["li.active", {dataSlideTo: 0}],
+                    ["li", {dataSlideTo: 1}],
+                    ["li", {dataSlideTo: 2}]
+                ]],
+                ["div.carousel-inner", [
+                    ["div.carousel-item.active", [
+                        ["img.d-block.w-100", {src: "/img/carousel1.png"}],
+                        ["div.carousel-caption.d-none.d-md-block", [
+                            ["h5", "First slide label"],
+                            ["p", "Nulla vitae elit libero, a pharetra augue mollis interdum."],
+                        ]]
+                    ]],
+                    ["div.carousel-item", [
+                        ["img.d-block.w-100", {src: "/img/carousel2.png"}],
+                        ["div.carousel-caption.d-none.d-md-block", [
+                            ["h5", "Second slide label"],
+                            ["p", "Lorem ipsum dolor sit amet, consectetur adipiscing elit."],
+                        ]]
+                    ]],
+                    ["div.carousel-item", [
+                        ["img.d-block.w-100", {src: "/img/carousel3.png"}],
+                        ["div.carousel-caption.d-none.d-md-block", [
+                            ["h5", "Third slide label"],
+                            ["p", "Praesent commodo cursus magna, vel scelerisque nisl consectetur."],
+                        ]]
+                    ]]
+                ]],
+                ["a.carousel-control-prev", {href: "#", dataSlide: "prev"}, [
+                    ["span.carousel-control-prev-icon"]
+                ]],
+                ["a.carousel-control-next", {href: "#", dataSlide: "next"}, [
+                    ["span.carousel-control-next-icon"]
+                ]]
+            ]];
+        });
+    `;
+
+            var fadeCode = `
+        $(demo).fragment(function(){
+            return ["div.carousel.slide.carousel-fade", {dataRide: "carousel"}, [
+                ["div.carousel-inner", [
+                    ["div.carousel-item", [
+                        ["img.d-block.w-100", {src: "/img/carousel1.png"}]
+                    ]],
+                    ["div.carousel-item.active", [
+                        ["img.d-block.w-100", {src: "/img/carousel2.png"}]
+                    ]],
+                    ["div.carousel-item", [
+                        ["img.d-block.w-100", {src: "/img/carousel3.png"}]
+                    ]]
+                ]],
+                ["a.carousel-control-prev", {href: "#", dataSlide: "prev"}, [
+                    ["span.carousel-control-prev-icon"]
+                ]],
+                ["a.carousel-control-next", {href: "#", dataSlide: "next"}, [
+                    ["span.carousel-control-next-icon"]
+                ]]
+            ]];
+        });
+    `;
+
+            var intervalCode = `
+        $(demo).fragment(function(){
+            return ["div.carousel.slide", {dataRide: "carousel"}, [
+                ["div.carousel-inner", [
+                    ["div.carousel-item", {dataInterval: 3000}, [
+                        ["img.d-block.w-100", {src: "/img/carousel1.png"}]
+                    ]],
+                    ["div.carousel-item.active", {dataInterval: 6000}, [
+                        ["img.d-block.w-100", {src: "/img/carousel2.png"}]
+                    ]],
+                    ["div.carousel-item", {dataInterval: 9000}, [
+                        ["img.d-block.w-100", {src: "/img/carousel3.png"}]
+                    ]]
+                ]],
+                ["a.carousel-control-prev", {href: "#", dataSlide: "prev"}, [
+                    ["span.carousel-control-prev-icon"]
+                ]],
+                ["a.carousel-control-next", {href: "#", dataSlide: "next"}, [
+                    ["span.carousel-control-next-icon"]
+                ]]
+            ]];
+        });
+    `;*/
+
+
+
+
+
+
+
+        });
+
+    </script>
+</body>
+</html>
