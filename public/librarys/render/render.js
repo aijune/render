@@ -8,14 +8,10 @@ define(["jquery"], function ($) {
             var events, elem, i;
             for ( i = 0; ( elem = elems[ i ] ) != null; i++ ) {
                 try {
-
-                    // Only trigger remove when necessary to save time
                     events = $._data( elem, "events" );
                     if ( events && events.remove ) {
                         $( elem ).triggerHandler( "remove" );
                     }
-
-                    // Http://bugs.jquery.com/ticket/8235
                 } catch ( e ) {}
             }
             orig( elems );
@@ -33,16 +29,10 @@ define(["jquery"], function ($) {
             for ( key in input[ inputIndex ] ) {
                 value = input[ inputIndex ][ key ];
                 if ( input[ inputIndex ].hasOwnProperty( key ) && value !== undefined ) {
-
-                    // Clone objects
                     if ( $.isPlainObject( value ) ) {
                         target[ key ] = $.isPlainObject( target[ key ] ) ?
                             $.widgetExtend( {}, target[ key ], value ) :
-
-                            // Don't extend strings, arrays, etc. with objects
                             $.widgetExtend( {}, value );
-
-                        // Copy everything else by reference
                     } else {
                         target[ key ] = value;
                     }
@@ -194,7 +184,13 @@ define(["jquery"], function ($) {
 
         transClassStyle: function(data){
             data.class = this.formatClass(data.class);
+            if(!data.class){
+                delete data.class;
+            }
             data.style = this.formatStyle(data.style);
+            if(!data.style){
+                delete data.style;
+            }
 
             return data;
         },
@@ -1181,7 +1177,6 @@ define(["jquery"], function ($) {
         }
     };
 
-
     var render = function(element, widget){
         widget = render.widget("render" + widgetUuid++, widget);
         new widget( element, {} );
@@ -1264,6 +1259,7 @@ define(["jquery"], function ($) {
         renders: {},
 
         _createWidget: function( element, options ) {
+            console.log(this.widgetName)
             this.node = $( element )[ 0 ];
             this.uuid = widgetUuid++;
             this.eventNamespace = "." + this.widgetName + this.uuid;
@@ -1291,29 +1287,33 @@ define(["jquery"], function ($) {
             var vnode, destroy;
 
             if(!$.isFunction(main)){
-                $.error("Render error: 'main' is not exist!");
+                $.error("render error: main");
             }
 
             vnode = main.call(this, this.options, this);
-            if(!$.isArray(vnode) || !vnode.length){
-                this.raw = null;
-            }
-            else{
+            if($.isArray(vnode)){
                 while($.isArray(vnode[0])){
                     vnode = vnode.length > 1 ? ["this", vnode] : vnode[0];
                 }
                 if(!/^this[#\.\[]*/.test(vnode[0])){
                     vnode = ["this", vnode];
                 }
-                this.raw = new Raw(vnode, this);
-
-                destroy = this._getHook("destroy");
-                this.raw.data.hooks = this.raw.data.hooks || {};
-                this.raw.data.hooks.destroy = function (raw, rm) {
-                    that._destroy();
-                    destroy(raw, rm);
-                };
             }
+            else if(vnode != null && typeof vnode !== "boolean"){
+                vnode = ["this", String(vnode)];
+            }
+            else{
+                return this.raw = null;
+            }
+
+            this.raw = new Raw(vnode, this);
+
+            destroy = this._getHook("destroy");
+            this.raw.data.hooks = this.raw.data.hooks || {};
+            this.raw.data.hooks.destroy = function (raw, rm) {
+                that._destroy();
+                destroy(raw, rm);
+            };
         },
 
         _getHook: function(name){
@@ -1357,13 +1357,42 @@ define(["jquery"], function ($) {
         },
 
         _class: function(){
+            var raw = Raw.prototype;
             var result = {};
             var leng = arguments.length;
             var i = 0;
             for( ; i < leng; i++){
-                $.extend(result, this.raw.formatClass(arguments[i]));
+                $.extend(result, raw.formatClass(arguments[i]));
             }
             return result;
+        },
+
+        _render: function(render){
+            var args = widgetSlice.call(arguments, 1);
+            var raw = Raw.prototype;
+            var result = [];
+            var vnode;
+
+            render = this.renders[render];
+            if(!$.isFunction(render)){
+                $.error("render error: " + render);
+            }
+
+            vnode = render.apply(this, args.concat([this.options, this]));
+            vnode = raw.formatVnode(vnode);
+            $.each(vnode, function (i, item) {
+                result = result.concat(raw.formatWidgetChildren(item));
+            });
+            return result;
+        },
+
+        _delay: function( handler, delay ) {
+            function handlerProxy() {
+                return ( typeof handler === "string" ? instance[ handler ] : handler )
+                    .apply( instance, arguments );
+            }
+            var instance = this;
+            return setTimeout( handlerProxy, delay || 0 );
         },
 
         _update: function (value, callback) {
@@ -1397,7 +1426,7 @@ define(["jquery"], function ($) {
                         callback.call(that, that.options);
                     });
                     that.updateCallbacks = undefined;
-                })
+                });
             }
         },
 

@@ -35,27 +35,41 @@ define(["render", "w/m/navbar", "w/m/tabbar", "w/m/section"], function (render) 
                 }];
             },
 
-            section: function(){
+            section: function(o, w){
                 return ["widget[name=section]", {
                     items: [
                         {
                             title: "基础用法",
-                            cellgroup: [
-                                {title: "单元格", value: "内容", rightIcon: true, leftIcon: "m-icon m-icon-location-o"},
-                                {title: "单元格", value: "内容", rightIcon: true, label: "我是说明文字"},
-                                {title: "单元格", value: "内容", rightIcon: true, onclick: function (e, data) {console.log(this, e, data);}}
-                            ]
+                            widget: {
+                                name: "cellgroup",
+                                options: {
+                                    items: [
+                                        {title: "单元格", value: "内容", rightIcon: true, leftIcon: "m-icon m-icon-location-o"},
+                                        {title: "单元格", value: "内容", rightIcon: true, label: "我是说明文字"},
+                                        {title: "单元格", value: "内容", rightIcon: true, onclick: function (e, data) {console.log(this, e, data);}}
+                                    ]
+                                }
+                            }
                         },
                         {
                             title: "基础用法",
-                            cellgroup: [
-                                {title: "单元格", value: "内容", rightIcon: true},
-                                {title: "单元格", value: "内容", rightIcon: true},
-                                {title: "单元格", value: "内容", rightIcon: true}
-                            ]
+                            widget: {
+                                name: "collapse",
+                                options: {
+                                    items: [
+                                        {title: "单元格", content: w._render("collapseOne")},
+                                        {title: "单元格", content: w._render("collapseOne")},
+                                        {title: "单元格", content: w._render("collapseOne")}
+                                    ]
+                                }
+                            }
                         }
                     ]
                 }];
+            },
+
+            collapseOne: function(){
+                return ["div", "collapseOnecollapseOnecollapseOnecollapseOne"]
             },
 
             tabbar: function(){

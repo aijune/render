@@ -1,4 +1,4 @@
-define(["render", "w/m/cellgroup"], function (render) {
+define(["render", "w/m/cellgroup", "w/m/collapse"], function (render) {
 
     render.widget("section", {
 
@@ -11,15 +11,9 @@ define(["render", "w/m/cellgroup"], function (render) {
                 return ["this.m-section", o.items.map(function (item, i) {
                     return ["div.m-section-block", [
                         ["div.m-section-block-title", item.title],
-                        !!item.cellgroup && ["render[name=cellgroup]", item]
+                        ["widget[name=" + item.widget.name + "]", item.widget.options]
                     ]];
                 })];
-            },
-
-            cellgroup: function (item, o, w) {
-                return ["widget[name=cellgroup]", {
-                    items: item.cellgroup
-                }];
             }
         }
     });
