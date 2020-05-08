@@ -84,6 +84,8 @@ define(["jquery"], function ($) {
 
         this.widget = widget;
         this.parent = parent;
+        this.render = parent ? parent.render : widget.renders.main;
+        this.args = parent ? parent.args : [widget.options, widget];
         this.node = node;
         this.selector = vnode[0];
 
@@ -333,6 +335,8 @@ define(["jquery"], function ($) {
                 return result;
             }
 
+            this.render = render;
+            this.args = args;
             $.each(result, function (i, item) {
                 raw = new Raw(item, that.widget, that);
                 if(raw.tag !== "render" && raw.tag !== "slot"){
@@ -552,6 +556,66 @@ define(["jquery"], function ($) {
             $.each(children, function (i, child){
                 child.addNS(child.data, child.children);
             });
+        },
+
+        update: function(value, callback){
+            var that = this;
+            var delay, result, raw;
+
+            if($.isFunction(value)){
+                value.call(this.widget, this.args[0]);
+            }
+            else{
+                $.widgetExtend(this.args[0], value);
+            }
+
+            if(callback){
+                this.updateCallbacks = this.updateCallbacks || [];
+                this.updateCallbacks.push(callback);
+            }
+
+            if(!this.updating){
+                this.updating = true;
+                delay = window.requestAnimationFrame || window.setTimeout;
+                delay(function () {
+                    that.updating = false;
+                    result = that.render.apply(that.widget, that.args);
+                    result = that.formatVnode(result);
+                    $.each(result, function (i, item) {
+                        raw = new Raw(item, that.widget, that);
+                        that.patchRaws([raw]);
+                    });
+
+                    //--
+
+                    $.each(that.updateCallbacks, function (i, callback) {
+                        callback.call(that.widget, that.args[0]);
+                    });
+                    that.updateCallbacks = undefined;
+                });
+            }
+        },
+
+        patchRaws: function(raws){
+            var that = this;
+            $.each(raws, function (i, raw) {
+                if(raw.tag === "render" || raw.tag === "slot"){
+                    that.patchRaws(raw.children);
+                }
+                else{
+                    that.render.diff.patch(that.renderTopRaw(), raw);
+                }
+            });
+        },
+
+        renderTopRaw: function () {
+            var raw = this;
+            var parent = this.parent;
+            while(parent.render === raw.render){
+                raw = parent;
+                parent = parent.parent;
+            }
+            return raw;
         }
     };
 
