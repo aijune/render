@@ -59,9 +59,26 @@ define(["render", "w/m/navbar", "w/m/tabbar", "w/m/section"], function (render) 
                                 name: "cellgroup",
                                 options: {
                                     items: [
-                                        {title: "单元格", value: "内容", rightIcon: true, leftIcon: "m-icon m-icon-location-o"},
-                                        {title: "单元格", value: "内容", rightIcon: true, label: "我是说明文字"},
-                                        {title: "单元格", value: "内容", rightIcon: true, onclick: function (e, data) {console.log(this, e, data);}}
+                                        {
+                                            title: "单元格",
+                                            value: "内容",
+                                            rightIcon: true,
+                                            leftIcon: "m-icon m-icon-location-o"
+                                        },
+                                        {
+                                            title: "单元格",
+                                            value: "内容",
+                                            rightIcon: true,
+                                            label: "我是说明文字"
+                                        },
+                                        {
+                                            title: "单元格",
+                                            value: "内容",
+                                            rightIcon: true,
+                                            onclick: function (e, data) {
+                                                console.log(this, e, data);
+                                            }
+                                        }
                                     ]
                                 }
                             }
@@ -71,10 +88,26 @@ define(["render", "w/m/navbar", "w/m/tabbar", "w/m/section"], function (render) 
                             widget: {
                                 name: "collapse",
                                 options: {
+                                    accordion: false,
+                                    onchange: function(e, data){
+                                        console.log(this, e, data)
+                                    },
                                     items: [
-                                        {title: "单元格", content: w._render("collapseOne")},
-                                        {title: "单元格", content: w._render("collapseOne")},
-                                        {title: "单元格", content: w._render("collapseOne")}
+                                        {
+                                            active: true,
+                                            leftIcon: "m-icon m-icon-shop-o",
+                                            title: "单元格",
+                                            content: w._render("collapseOne")
+                                        },
+                                        {
+                                            title: "单元格",
+                                            content: w._render("collapseOne")
+                                        },
+                                        {
+                                            disabled: true,
+                                            title: "单元格",
+                                            content: w._render("collapseOne")
+                                        }
                                     ]
                                 }
                             }

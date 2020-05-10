@@ -3,6 +3,7 @@ define(["render"], function (render) {
     render.widget("collapse", {
 
         options: {
+            accordion: true,
             active: 0,
             items: []
         },
@@ -15,15 +16,17 @@ define(["render"], function (render) {
             },
             item: function (item, i, o, w) {
                 return ["div.m-collapse-item", {
-                    class: (i !== 0) && "van-hairline-top",
-                    onclick: [w._click, item, i]
+                    class: (i !== 0) && "m-hairline-top"
                 }, [
                     ["div.m-collapse-item-title.m-cell.m-cell-clickable", {
                         tabindex: 0,
                         class: {
-                            "m-collapse-item-title-expanded": o.active === i
-                        }
+                            "m-collapse-item-title-expanded": o.accordion ? o.active === i : !!item.active,
+                            "m-collapse-item-title-disabled": !!item.disabled
+                        },
+                        onclick: [w._click, item, i]
                     }, [
+                        !!item.leftIcon && ["i.m-cell-left-icon", {class: item.leftIcon}],
                         ["div.m-cell-title", [
                             ["span", item.title]
                         ]],
@@ -31,7 +34,7 @@ define(["render"], function (render) {
                     ]],
                     ["div.m-collapse-item-wrapper", {
                         style: {
-                            height: [w._height, i, o]
+                            height: [w._height, item, i, o]
                         }
                     }, [
                         ["div.m-collapse-item-content", item.content]
@@ -40,26 +43,58 @@ define(["render"], function (render) {
             }
         },
 
-        _click: function (item, i) {
-            this._update(function (o) {
-                o.active = o.active === i ? -1 : i;
-            });
+        _click: function (item, i, e) {
+            if(item.disabled){
+                return false;
+            }
+            this._update(
+                function (o) {
+                    if(o.accordion){
+                        o.active = o.active === i ? -1 : i;
+                    }
+                    else{
+                        item.active = !item.active;
+                    }
+                },
+                function (o) {
+                    if(o.onchange){
+                        o.onchange(e, {
+                            item: item,
+                            index: i,
+                            active: o.accordion ? o.active : item.active
+                        });
+                    }
+                }
+            );
         },
 
-        _height: function (i, o, raw) {
+        _height: function (item, i, o, raw) {
             var element = render.$(raw.node);
-            if(o.active !== i){
+            var children;
+            if(
+                (o.accordion && o.active !== i) ||
+                (!o.accordion && !item.active)
+            ){
                 this._delay(function () {
                     element.css("display", "none");
                 }, 300);
                 return 0;
             }
             else{
-                return element
-                    .css("display", "")
-                    .children().outerHeight(true);
+                element.css("display", "");
+                children = element.children();
+                if(children.length){
+                    return children.outerHeight(true);
+                }
+                else{
+                    this._delay(function () {
+                        element.css("height", element.children().outerHeight(true));
+                    });
+                    return undefined;
+                }
             }
         }
+
     });
 
 });

@@ -246,6 +246,13 @@ define(["jquery"], function ($) {
                     if($.isFunction(value)){
                         value = value.apply(that.widget, args);
                     }
+                    if($.isFunction(value)){
+                        value = {
+                            oncreate: value,
+                            onupdate: value,
+                            ondestroy: value
+                        }
+                    }
                     $.each(value, function (k, v) {
                         that._proxyEventHook(k, v, data);
                     });
@@ -1323,7 +1330,6 @@ define(["jquery"], function ($) {
         renders: {},
 
         _createWidget: function( element, options ) {
-            console.log(this.widgetName)
             this.node = $( element )[ 0 ];
             this.uuid = widgetUuid++;
             this.eventNamespace = "." + this.widgetName + this.uuid;
