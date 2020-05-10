@@ -2,7 +2,22 @@ define(["render", "w/m/navbar", "w/m/tabbar", "w/m/section"], function (render) 
 
     return render.widget("home", {
 
-        options: {},
+        options: {
+            items: [
+                {
+                    title: "title1",
+                    text: "title1title1title1"
+                },
+                {
+                    title: "title2",
+                    text: "title2title2title2"
+                },
+                {
+                    title: "title3",
+                    text: "title3title3title3"
+                }
+            ]
+        },
 
         renders: {
 

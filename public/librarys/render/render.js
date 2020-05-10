@@ -603,7 +603,7 @@ define(["jquery"], function ($) {
                     that.patchRaws(raw.children);
                 }
                 else{
-                    that.render.diff.patch(that.renderTopRaw(), raw);
+                    that.widget.diff.patch(that.renderTopRaw(), raw);
                 }
             });
         },
