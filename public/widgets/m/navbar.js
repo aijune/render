@@ -8,12 +8,12 @@ define(["render"], function (render) {
             left: {
                 icon: "",
                 text: "",
-                click: null
+                onclick: null
             },
             right: {
                 icon: "",
                 text: "",
-                click: null
+                onclick: null
             }
         },
 

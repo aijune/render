@@ -238,31 +238,10 @@ define(["jquery"], function ($) {
                 if(/^on/.test(key)){
                     that._proxyEventHook(key, value, data);
                 }
-                else if(key === "hooks"){
-                    if($.isArray(value)){
-                        args =  widgetSlice.call(value, 1);
-                        value = value[0];
-                    }
-                    if($.isFunction(value)){
-                        value = value.apply(that.widget, args);
-                    }
-                    if($.isFunction(value)){
-                        value = {
-                            oncreate: value,
-                            onupdate: value,
-                            ondestroy: value
-                        }
-                    }
-                    $.each(value, function (k, v) {
-                        that._proxyEventHook(k, v, data);
-                    });
-                    delete data.hooks;
-                }
                 else if(typeof value === "object"){
                     that._setEventHook(value);
                 }
             });
-
         },
 
         _proxyEventHook: function(key, value, data){
@@ -273,17 +252,21 @@ define(["jquery"], function ($) {
                 args = widgetSlice.call(value, 1);
                 value = value[0];
             }
+
+            delete data[key];
+
             if(value == null || typeof value === "boolean"){
-                delete data[key];
                 return;
             }
             if($.isFunction(value)){
-                data[key] = function () {
-                    return value.apply(that.widget, args.concat(widgetSlice.call(arguments, 0)));
-                };
+                $.each(key.split(/,\s*/), function (i, k) {
+                    data[k] = function () {
+                        return value.apply(that.widget, args.concat(widgetSlice.call(arguments, 0)));
+                    };
+                });
             }
             else{
-                return $.error("event error: " + value);
+                return $.error("event/hook error: " + value);
             }
         },
 
@@ -852,34 +835,31 @@ define(["jquery"], function ($) {
             this.updateBase(oldRaw, raw, "events", {
 
                 hook: function(node, oldEvents, events, callbacks){
-
                     var that = this;
-
-                    $.each(events, function(key, value){
-
-                        if(!oldEvents || !oldEvents[key]){
-                            callbacks.add.call(that, node, key, value);
+                    var handle = raw.handle = (oldRaw && oldRaw.handle) || function (e) {
+                        var name = e.type;
+                        var events = handle.raw.data.events;
+                        if (events && events[name]) {
+                            events[name](e, raw, oldRaw);
                         }
-                        else{
-                            callbacks.remove.call(that, node, key);
-                            callbacks.add.call(that, node, key, value);
+                    };
+                    handle.raw = raw;
+                    $.each(events, function(key, value){
+                        if(!oldEvents || !oldEvents[key]){
+                            callbacks.add.call(that, node, key, handle);
                         }
                     });
                 },
 
-                add: function(node, key, value){
+                add: function(node, key, handle){
                     var match = key.match(/^([\w:-]*)\s*(.*)$/);
                     var eventName = match[1] + raw.widget.eventNamespace;
                     var selector = match[2];
-                    var fn = function (e) {
-                        value(e, raw, oldRaw);
-                    };
-
                     if(selector){
-                        $(node).on( eventName, selector, fn);
+                        $(node).on( eventName, selector, handle);
                     }
                     else{
-                        $(node).on( eventName, fn);
+                        $(node).on( eventName, handle);
                     }
                 },
 
