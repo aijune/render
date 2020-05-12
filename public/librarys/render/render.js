@@ -1362,7 +1362,7 @@ define(["jquery"], function ($) {
             this.raw.data.hooks = this.raw.data.hooks || {};
             this.raw.data.hooks.destroy = function (raw, rm) {
                 that._destroy();
-                destroy(raw, rm);
+                destroy ? destroy(raw, rm) : rm();
             };
         },
 
@@ -1480,13 +1480,17 @@ define(["jquery"], function ($) {
             }
         },
 
+        _destroy: function(){
+            $.removeData(this.node, this.widgetName);
+        },
+
         update: function(options){
             $.widgetExtend( this.options, options );
             this._update();
         },
 
         destroy: function(){
-            $.removeData(this.node, this.widgetName);
+            this._destroy();
         }
     };
 

@@ -1,6 +1,6 @@
-define(["jquery", "bootstrap", "extend"], function () {
+define(["render"], function (render) {
 
-    $.widget("ui.layout", {
+    render.widget("layout", {
 
         options: {
 
