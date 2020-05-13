@@ -1,12 +1,23 @@
-define(["render", "w/alert"], function (render) {
+define(["render", "w/badge"], function (render) {
 
     render("#layout", {
 
         renders: {
             main: function (o, w) {
-                return ["widget[name=alert]", {type: "secondary"}, [
-                    ["div", "<strong>Holy guacamole!</strong> You should check in on some of those fields below."]
-                ]]
+                return [
+                    ["widget[name=badge]", {
+                        type: "primary",
+                        pill: true,
+                        content: 45
+                    }, ],
+                    ["widget[name=badge]", {
+                        tag: "a",
+                        href: "#",
+                        type: "primary",
+                        pill: true,
+                        content: 45
+                    }]
+                ];
             }
         }
 

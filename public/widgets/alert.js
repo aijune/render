@@ -3,10 +3,10 @@ define(["render"], function (render) {
     render.widget("alert", {
 
         options: {
-            type: "primary",
+            type: "primary", //primary,secondary,success,info,warning,danger,light,dark
             closable: true,
             animate: {
-                enter: "backInDown",
+                enter: "fadeIn",
                 leave: "fadeOut"
             },
 
@@ -22,7 +22,8 @@ define(["render"], function (render) {
                         {name: "animate__animated", init: !!o.animate && "add"},
                         {name: "animate__" + o.animate.enter, init: !!o.animate && "add"},
                         {name: "animate__" + o.animate.leave, destroy: !!o.animate && "add"}
-                    ]
+                    ],
+                    ondestroy: [w._remove, o]
                 }, [
                     ["slot[name=default]", function (s, o, w) {
                         return s.text || s.children;
@@ -40,6 +41,13 @@ define(["render"], function (render) {
             this._update({
                 closed: true
             });
+        },
+
+        _remove: function (o, raw, rm) {
+            !o.animate ? rm() :
+                render.$(raw.node).one("animationend", function () {
+                    rm();
+                });
         }
 
     });
