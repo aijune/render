@@ -1,119 +1,110 @@
-define(["render"], function (render) {
+define(["render", "w/menu"], function (render) {
 
-    render.widget("layout", {
+    return render.widget("layout", {
 
         options: {
-
+            state: "max",
+            title: {max: "AdminUI", min: "UI"},
+            navs: [
+                {
+                    toggle: "消息",
+                    subs: [
+                        {href: "#", text: "Action"},
+                        {href: "#", text: "Another action"},
+                        {href: "#", text: "Something else here"},
+                        null,
+                        {href: "#", text: "Separated link"},
+                    ]
+                },
+                {
+                    toggle: "语言切换",
+                    subs: [
+                        {href: "#", text: "Action"},
+                        {href: "#", text: "Another action"},
+                        {href: "#", text: "Something else here"},
+                        null,
+                        {href: "#", text: "Separated link"},
+                    ]
+                },
+                {
+                    toggle: "用户中心",
+                    subs: [
+                        {href: "#", text: "Action"},
+                        {href: "#", text: "Another action"},
+                        {href: "#", text: "Something else here"},
+                        null,
+                        {href: "#", text: "Separated link"},
+                    ]
+                }
+            ],
+            menu: [
+                {href: "/", icon: "glyphicon glyphicon-dashboard", title: "仪表盘"},
+                {href: "#", icon: "glyphicon glyphicon-th-large", title: "组件", extend: false, subs: [
+                        {href: "/forms", title: "Form 表单"},
+                        {href: "/dropdowns", title: "Dropdown 下拉"},
+                        {href: "/buttons", title: "Button 按钮"},
+                        {href: "/icons", title: "Icon 图标"}
+                    ]}
+            ]
         },
 
         renders: {
-            main: function (o, w) {
-                return [
+            main: function(o, w){
+                return ["this.layout", [
                     ["render[name=header]"],
                     ["render[name=body]"]
-                ];
-            },
-            header: function (o, w) {
-                return ["nav", {
-                    class: "navbar navbar-expand-lg navbar-light bg-light"
-                }, [
-                    ["render[name=brand]"],
-                    ["render[name=collapse]"]
                 ]];
             },
-            brand: function (o, w) {
-                return [
-                    ["a.navbar-brand[href=#]", "Brand"],
-                    ["button.navbar-toggler[type=button]", {
-                        "data-toggle": "collapse",
-                        "data-target": "#navbarSupportedContent"
-                    }, ["span.navbar-toggler-icon"]]
-                ];
-            },
-            collapse: function (o, w) {
-                return ["div#navbarSupportedContent.collapse.navbar-collapse", [
-                    ["ul.navbar-nav.mr-auto", [
-                        ["li.nav-item.active", [
-                            ["a.nav-link[href=#]", "Home"]
-                        ]],
-                        ["li.nav-item", [
-                            ["a.nav-link[href=#]", "Link"]
-                        ]],
-                        ["li.nav-item.dropdown", [
-                            ["a.nav-link.dropdown-toggle[data-toggle=dropdown]", "Dropdown"],
-                            ["div.dropdown-menu", [
-                                ["a.dropdown-item[href=#]", "Action"],
-                                ["a.dropdown-item[href=#]", "Another action"],
-                                ["div.dropdown-divider"],
-                                ["a.dropdown-item[href=#]", "Something else here"]
-                            ]]
-                        ]],
-                        ["li.nav-item", [
-                            ["a.nav-link.disabled[href=#][tabindex=-1]", "Disabled"]
-                        ]]
-                    ]],
-                    ["form.form-inline.my-2.my-lg-0", [
-                        ["input.form-control.mr-sm-2[type=search][placeholder=Search]"],
-                        ["button.btn.btn-outline-success.my-2.my-sm-0[type=submit]", "Search"]
-                    ]]
+            header: function (o, w) {
+                return ["header.layout-header", [
+                    ["render[name=brand]"],
+                    ["render[name=topbar]"]
                 ]];
             },
             body: function (o, w) {
-                return ["div.d-flex",
-                    ["render[name=aside]", {style: "250px"}],
-                    ["div.article.flex-grow-1.flex-shrink-1", "我是内容。"]
-                ];
+                return ["main.layout-body", {class: o.state}, [
+                    ["render[name=aside]"],
+                    ["article.layout-article.router-view"]
+                ]];
+            },
+            brand: function(o, w){
+                return ["a.layout-brand[href=#]", [
+                    ["span.toggle", {class: o.state}, o.title[o.state]]
+                ]];
+            },
+            topbar: function(o, w){
+                var arrow = o.state === "max" ? "left" : "right";
+                return ["div.layout-topbar", [
+                    ["a.toggle[href=#]", {
+                        onclick: w._toggle
+                    },["i.icon", {class: "glyphicon glyphicon-menu-" + arrow}]],
+                    ["div.nav", ["render[name=topbarNavs]", o.navs]]
+                ]];
+            },
+            topbarNavs: function(item){
+                /*return ["widget[name=dropdown]", {placement: "bottom-end"}, [
+                    ["slot[name=toggle]", [
+                        ["a.dropdown-toggle[href=#]", item.toggle]
+                    ]],
+                    ["slot[name=menu]", [
+                        ["render[name=topbarSubs]", item.subs]
+                    ]]
+                ]];*/
+            },
+            topbarSubs: function(item){
+                return item ? ["a.dropdown-item", {href: item.href}, item.text] : ["div.dropdown-divider"];
             },
             aside: function (o, w) {
-                return ["div#accordionAside.accordion", [
-                    ["div.card", [
-                        ["div.card-header", [
-                            ["h2.mb-0", [
-                                ["button.btn.btn-link.btn-block.text-left[type=button]", {
-                                    "data-toggle": "collapse",
-                                    "data-target": "#collapseOne"
-                                }, "Collapsible Group Item #1"],
-                            ]]
-                        ]],
-                        ["div#collapseOne.collapse.show[data-parent=#accordionAside]", [
-                            ["div.card-body.p-0", [
-                                ["ul.list-group", [
-                                    ["li.list-group-item", "Cras justo odio"],
-                                    ["li.list-group-item", "Dapibus ac facilisis in"],
-                                    ["li.list-group-item", "Morbi leo risus"],
-                                    ["li.list-group-item", "Porta ac consectetur ac"],
-                                    ["li.list-group-item", "Vestibulum at eros"]
-                                ]]
-                            ]]
-                        ]]
-                    ]],
-                    ["div.card", [
-                        ["div.card-header", [
-                            ["h2.mb-0", [
-                                ["button.btn.btn-link.btn-block.text-left[type=button]", {
-                                    "data-toggle": "collapse",
-                                    "data-target": "#collapseTwo"
-                                }, "Collapsible Group Item #1"],
-                            ]]
-                        ]],
-                        ["div#collapseTwo.collapse[data-parent=#accordionAside]", [
-                            ["div.card-body.p-0", [
-                                ["ul.list-group", [
-                                    ["li.list-group-item", "Cras justo odio"],
-                                    ["li.list-group-item", "Dapibus ac facilisis in"],
-                                    ["li.list-group-item", "Morbi leo risus"],
-                                    ["li.list-group-item", "Porta ac consectetur ac"],
-                                    ["li.list-group-item", "Vestibulum at eros"]
-                                ]]
-                            ]]
-                        ]]
-                    ]]
+                return ["aside.layout-aside", [
+                    ["widget[name=menu]", {items: o.menu}]
                 ]];
             }
         },
 
-        _create: function(){
-            this._render(this.element, "main");
+        _toggle: function (e, raw) {
+            this._update(function (o) {
+                o.state = o.state === "max" ? "min" : "max";
+            });
         }
     });
 });

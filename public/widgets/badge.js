@@ -5,7 +5,7 @@ define(["render"], function (render) {
         defaultTag: "span",
 
         options: {
-            type: "primary", //primary,secondary,success,info,warning,danger,light,dark
+            type: "primary",
             pill: false,
             content: ""
         },

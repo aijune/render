@@ -8,8 +8,9 @@ requirejs = {
         extend: "../librarys/jquery/jquery.extend",
         popper: "../librarys/popper/popper",
         w: "../widgets",
-        history: "../librarys/router/history",
-        router: "../librarys/router/router"
+        router: "../librarys/router/router",
+        "async-validator": "../librarys/validator/async-validator",
+        validator: "../librarys/validator/validator"
     },
     shim: {
         //bootstrap: ["popper"]

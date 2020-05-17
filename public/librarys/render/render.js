@@ -1228,9 +1228,11 @@ define(["jquery"], function ($) {
         }
     };
 
-    var render = function(element, widget){
-        widget = render.widget("render" + widgetUuid++, widget);
-        new widget( element, {} );
+    var render = function(element, widget, options){
+        if(widget.renders){
+            widget = render.widget("render" + widgetUuid++, widget);
+        }
+        new widget( element, options || {} );
     };
 
     var widgets = render.widgets = {};
@@ -1482,6 +1484,7 @@ define(["jquery"], function ($) {
 
         _destroy: function(){
             $.removeData(this.node, this.widgetName);
+            $(this.node).empty();
         },
 
         update: function(options){

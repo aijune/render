@@ -1,16 +1,17 @@
-define(["render", "history"], function (render) {
+define(["render"], function (render) {
 
     var $ = render.$;
 
-    var Router = function (o) {
-        o = o || {};
+    var Router = function (options) {
+        options = options || {};
 
-        this.mode = o.mode || "history";
-        this.error = o.error || function () {};
-        this.layout = o.layout;
-        this.routes = o.routes || {};
+        this.mode = options.mode || "hash";
+        this.error = options.error || function () {};
+        this.layout = options.layout;
+        this.routes = options.routes || {};
         this.view = $(".router-view");
         this.path = "";
+        this.state = {};
         this.paths = [];
         this.prevPaths = [];
         this.count = -1;
@@ -23,18 +24,44 @@ define(["render", "history"], function (render) {
         constructor: Router,
 
         _init: function () {
+
+            if(this.mode === "hash"){
+                this._hash();
+            }
+            else if(this.mode === "history"){
+                this._history();
+            }
+        },
+
+        _hash: function(){
+
             var that = this;
 
-            render.history.init({
-                html4Mode: this.mode === "hash" ? true : false
+            $(window).on("hashchange", function () {
+                that._match(location.hash.substring(1), that);
             });
 
-            render.history.Adapter.bind(window, "statechange", function(){
-                that.state = render.history.getState();
-                that._match(that.state.hash, that);
+            $(function () {
+                if(!location.hash || location.hash === "#"){
+                    location.hash = "#/"
+                }
+                else{
+                    that._match(location.hash.substring(1), that);
+                }
+            })
+        },
+
+        _history: function () {
+
+            var that = this;
+
+            $(window).on("popstate", function () {
+                that._match(location.pathname, that);
             });
 
-            render.history.pushState({}, null, "/");
+            $(function () {
+                that._match(location.pathname, that);
+            });
         },
 
         _match: function (path, router) {
@@ -100,21 +127,30 @@ define(["render", "history"], function (render) {
             });
         },
 
-        go: function (o) {
-            if(this.mode !== "backend"){
-                o.event && o.event.preventDefault();
-                render.history.pushState(o.data || {}, o.title || "", o.url || "");
+        go: function (path, title, state, event) {
+            if(this.mode !== "static"){
+                event && event.preventDefault();
+                if(title){
+                    document.title = title;
+                }
+
+                if(this.mode === "hash"){
+                    location.hash = "#" + path;
+                }
+                else if(this.mode === "history"){
+                    history.pushState({}, null, path);
+                }
             }
         }
     };
 
     var router;
 
-    render.router = function (o) {
-        return router = new Router(o);
+    render.router = function (options) {
+        return router = new Router(options);
     };
 
-    render.router.go = function (o) {
-        router.go(o);
+    render.router.go = function (path, title, state, event) {
+        router.go(path, title, state, event);
     };
 });
