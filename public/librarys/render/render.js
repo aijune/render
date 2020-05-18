@@ -1315,6 +1315,8 @@ define(["jquery"], function ($) {
             this.node = $( element )[ 0 ];
             this.uuid = widgetUuid++;
             this.eventNamespace = "." + this.widgetName + this.uuid;
+            this.bindings = $();
+
             $.data( this.node, "widgets-" + this.widgetName, this );
 
             this.options = $.widgetExtend( {}, this.options, options );
@@ -1483,7 +1485,12 @@ define(["jquery"], function ($) {
         },
 
         _destroy: function(){
-            $.removeData(this.node, this.widgetName);
+            $(this.node)
+                .off( this.eventNamespace )
+                .removeData( this.widgetName );
+
+            this.bindings.off( this.eventNamespace );
+
             $(this.node).empty();
         },
 
@@ -1494,6 +1501,79 @@ define(["jquery"], function ($) {
 
         destroy: function(){
             this._destroy();
+        },
+
+        _on: function( element, handlers ) {
+            var delegateElement;
+            var instance = this;
+
+            if ( !handlers ) {
+                handlers = element;
+                element = delegateElement = $(this.node);
+            } else {
+                element = delegateElement = $( element );
+                this.bindings = this.bindings.add( element );
+            }
+
+            $.each( handlers, function( event, handler ) {
+                function handlerProxy(e) {
+                    var raw, args = [e];
+
+                    if(raw = $(e.currentTarget).data("_raw_")){
+                        args.push(raw);
+                    }
+
+                    return ( typeof handler === "string" ? instance[ handler ] : handler )
+                        .apply( instance, args );
+                }
+
+                if ( typeof handler !== "string" ) {
+                    handlerProxy.guid = handler.guid =
+                        handler.guid || handlerProxy.guid || $.guid++;
+                }
+
+                var match = event.match( /^([\w:-]*)\s*(.*)$/ );
+                var eventName = match[ 1 ] + instance.eventNamespace;
+                var selector = match[ 2 ];
+
+                if ( selector ) {
+                    delegateElement.on( eventName, selector, handlerProxy );
+                } else {
+                    element.on( eventName, handlerProxy );
+                }
+            } );
+        },
+
+        _off: function( element, eventName ) {
+            eventName = ( eventName || "" ).split( " " ).join( this.eventNamespace + " " ) +
+                this.eventNamespace;
+            $( element ).off( eventName ).off( eventName );
+
+            this.bindings = $( this.bindings.not( element ).get() );
+        },
+
+        _trigger: function( type, event, data ) {
+            var prop, orig;
+            var callback = this.options[ type ];
+
+            data = data || {};
+            event = $.Event( event );
+            event.type = type.toLowerCase();
+            event.target = this.node;
+
+            orig = event.originalEvent;
+            if ( orig ) {
+                for ( prop in orig ) {
+                    if ( !( prop in event ) ) {
+                        event[ prop ] = orig[ prop ];
+                    }
+                }
+            }
+
+            this.element.trigger( event, data );
+            return !( $.isFunction( callback ) &&
+                callback.apply( this.element[ 0 ], [ event ].concat( data ) ) === false ||
+                event.isDefaultPrevented() );
         }
     };
 

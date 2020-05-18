@@ -2,6 +2,98 @@ define(["render"], function (render) {
 
     var $ = render.$;
 
+    var History = function (stack, index) {
+        this.stack = stack || [];
+        this.activeIndex = index || 0;
+    }
+
+    History.prototype = {
+
+        constructor: History,
+
+        getActive: function() {
+            return this.stack[ this.activeIndex ];
+        },
+
+        getLast: function() {
+            return this.stack[ this.previousIndex ];
+        },
+
+        getNext: function() {
+            return this.stack[ this.activeIndex + 1 ];
+        },
+
+        getPrev: function() {
+            return this.stack[ this.activeIndex - 1 ];
+        },
+
+        add: function( url, data ) {
+            data = data || {};
+
+            if ( this.getNext() ) {
+                this.clearForward();
+            }
+
+            data.url = url;
+            this.stack.push( data );
+            this.activeIndex = this.stack.length - 1;
+        },
+
+        clearForward: function() {
+            this.stack = this.stack.slice( 0, this.activeIndex + 1 );
+        },
+
+        find: function( url, stack, earlyReturn ) {
+            stack = stack || this.stack;
+
+            var entry, i, length = stack.length, index;
+
+            for ( i = 0; i < length; i++ ) {
+                entry = stack[i];
+
+                if ( decodeURIComponent(url) === decodeURIComponent(entry.url)) {
+                    index = i;
+
+                    if ( earlyReturn ) {
+                        return index;
+                    }
+                }
+            }
+
+            return index;
+        },
+
+        closest: function( url ) {
+            var closest, a = this.activeIndex + 1;
+
+            closest = this.find( url, this.stack.slice(0, a) );
+
+            if ( closest === undefined ) {
+                closest = this.find( url, this.stack.slice(a), true );
+                closest = closest === undefined ? closest : closest + a;
+            }
+
+            return closest;
+        },
+
+        direct: function( opts ) {
+            var newActiveIndex = this.closest( opts.url ), a = this.activeIndex;
+
+            if ( newActiveIndex !== undefined ) {
+                this.activeIndex = newActiveIndex;
+                this.previousIndex = a;
+            }
+
+            if ( newActiveIndex === undefined && opts.error ) {
+                opts.error( this.getActive() );
+            }
+            else if(opts.success){
+                opts.success( this.getActive(), "back" );
+            }
+        }
+    };
+
+
     var Router = function (options) {
         options = options || {};
 
@@ -11,11 +103,11 @@ define(["render"], function (render) {
         this.routes = options.routes || {};
         this.view = $(".router-view");
         this.path = "";
-        this.state = {};
         this.paths = [];
         this.prevPaths = [];
         this.count = -1;
 
+        this.history = new History();
         this._init();
     };
 
@@ -38,7 +130,7 @@ define(["render"], function (render) {
             var that = this;
 
             $(window).on("hashchange", function () {
-                that._match(location.hash.substring(1), that);
+                that._handleEvent(location.hash.substring(1));
             });
 
             $(function () {
@@ -46,25 +138,37 @@ define(["render"], function (render) {
                     location.hash = "#/"
                 }
                 else{
-                    that._match(location.hash.substring(1), that);
+                    that._match(location.hash.substring(1), that, {});
                 }
             })
         },
 
         _history: function () {
-
             var that = this;
 
             $(window).on("popstate", function () {
-                that._match(location.pathname, that);
+                that._handleEvent(location.pathname);
             });
 
             $(function () {
-                that._match(location.pathname, that);
+                that._match(location.pathname, that, {});
             });
         },
 
-        _match: function (path, router) {
+        _handleEvent: function(url){
+            var that = this;
+            that.history.direct({
+                url: url,
+                success: function (state) {
+                    that._match(url, that, state);
+                },
+                error: function (state) {
+                    that.error.call(that, that.view, state);
+                }
+            });
+        },
+
+        _match: function (path, router, state) {
             var that = this;
             var handler, view, prevPath;
 
@@ -74,7 +178,7 @@ define(["render"], function (render) {
             $.Deferred(function (dfd) {
                 if($.isFunction(router.layout)){
                     if(router.path !== prevPath.path){
-                        router.layout.call(this, router.view, this.state, function () {
+                        router.layout.call(that, router.view, state, function () {
                             view = router.view.find(".router-view");
                             dfd.resolveWith(that);
                         });
@@ -89,7 +193,7 @@ define(["render"], function (render) {
                     dfd.resolveWith(that);
                 }
             }).done(function () {
-                this.paths.push({
+                that.paths.push({
                     path: router.path,
                     view: view
                 });
@@ -111,34 +215,37 @@ define(["render"], function (render) {
                             value.destroy();
                         }
                     });
-                    handler.call(this, view, this.state);
+                    handler.call(that, view, state);
                 }
                 else if(handler && handler.routes){
                     handler.view = view || router.view;
-                    return this._match(path.substring(handler.path.length), handler);
+                    return that._match(path.substring(handler.path.length), handler);
                 }
                 else{
-                    this.error.call(this, this.view, this.state);
+                    that.error.call(that, that.view, state);
                 }
 
-                this.count = -1;
-                this.prevPaths = this.paths;
-                this.paths = [];
+                that.count = -1;
+                that.prevPaths = this.paths;
+                that.paths = [];
             });
         },
 
-        go: function (path, title, state, event) {
+        go: function (url, title, state, event) {
             if(this.mode !== "static"){
                 event && event.preventDefault();
                 if(title){
                     document.title = title;
                 }
 
+                this.history.add(url, state);
+
                 if(this.mode === "hash"){
-                    location.hash = "#" + path;
+                    location.hash = "#" + url;
                 }
                 else if(this.mode === "history"){
-                    history.pushState({}, null, path);
+                    history.pushState({}, null, url);
+                    this._match(url, this, state);
                 }
             }
         }
