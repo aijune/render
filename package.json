@@ -2,7 +2,7 @@
   "name": "vdom-render",
   "version": "1.0.1",
   "description": "Browser rendering Library Based on virtual DOM.",
-  "main": "index.js",
+  "main": "./dist/bundle.js",
   "scripts": {
     "build": "webpack"
   },
