@@ -1,5 +1,5 @@
-import $ from "../jquery";
-import Widget from "../widget";
+import $ from "../jquery/index";
+import Widget from "../widget/index";
 
 const render = function(element, widget, options){
     if(widget.renders){
@@ -8,8 +8,9 @@ const render = function(element, widget, options){
     new widget( element, options || {} );
 };
 
-render.$ = $;
+render.jquery = $;
 render.Widget = Widget;
+render.widgets = {};
 render.widget = function( name, base, prototype ) {
     var constructor, basePrototype;
     var proxiedPrototype = {};

@@ -1,10 +1,10 @@
 {
-  "name": "vdom-render",
-  "version": "1.0.1",
+  "name": "jianaj-render",
+  "version": "1.0.0",
   "description": "Browser rendering Library Based on virtual DOM.",
-  "main": "./dist/bundle.js",
+  "main": "./dist/render.js",
   "scripts": {
-    "build": "webpack"
+    "build": "rollup --config"
   },
   "repository": {
     "type": "git",
@@ -17,7 +17,7 @@
     "browser",
     "jquery"
   ],
-  "author": "jianaijun",
+  "author": "aijune",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/aijune/render/issues"
@@ -27,7 +27,6 @@
     "jquery": "^3.5.1"
   },
   "devDependencies": {
-    "webpack": "^4.43.0",
-    "webpack-cli": "^3.3.12"
+    "rollup": "^2.18.0"
   }
 }

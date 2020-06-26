@@ -1,5 +1,5 @@
-import $ from "../jquery"
-import Sel from "../sel";
+import $ from "../jquery/index"
+import Sel from "../sel/index";
 import proto from "./proto";
 
 const Raw = function (vnode, widget, parent, node) {

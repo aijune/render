@@ -1,4 +1,4 @@
-import $ from "../jquery";
+import $ from "../jquery/index";
 
 const proto = {
 
@@ -208,7 +208,7 @@ const proto = {
         this.render = render;
         this.args = args;
         $.each(result, function (i, item) {
-            raw = new Raw(item, that.widget, that);
+            raw = new that.constructor(item, that.widget, that);
             if(raw.tag !== "render" && raw.tag !== "slot"){
                 parent = that.parent;
                 while (parent.tag === "render" || parent.tag === "slot"){
@@ -264,7 +264,7 @@ const proto = {
             return vnode;
         }
         $.each(vnode, function (i, item) {
-            raw = new Raw(item, widget, that);
+            raw = new that.constructor(item, widget, that);
             raw.parent = that.parent.tag !== "render" ? that.parent : that.parent.parent;
             raw.parent.children.push(raw);
         });
@@ -414,7 +414,7 @@ const proto = {
             if(typeof item === "string"){
                 item = ["span", item];
             }
-            child = new Raw(item, that.widget, that);
+            child = new that.constructor(item, that.widget, that);
             if($.inArray(child.tag, ["render", "slot"]) < 0){
                 that.children.push(child);
             }
@@ -452,7 +452,7 @@ const proto = {
                 result = that.render.apply(that.widget, that.args);
                 result = that.formatVnode(result);
                 $.each(result, function (i, item) {
-                    raw = new Raw(item, that.widget, that);
+                    raw = new that.constructor(item, that.widget, that);
                     that.patchRaws([raw]);
                 });
 

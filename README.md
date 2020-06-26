@@ -1,18 +1,18 @@
-# vdom-render.js
+# jianaj-render.js
 基于虚拟DOM技术的浏览器端渲染库。
 ## 安装
 ```shell script
 // npm:
-npm install vdom-render
+npm install jianaj-render
 // yarn:
-yarn add vdom-render
+yarn add jianaj-render
 ````
-## 引入和vdomRender()
+## 引入和render()
 ```javascript
-import vdomRender from 'vdom-render';
+import render from 'jianaj-render';
 
 /* 
-vdomRender(selector, options)
+render(selector, options)
 -----------------------------
 渲染一个DOM元素。
 
@@ -20,7 +20,7 @@ vdomRender(selector, options)
 @param: options, 包含renders['main']主方法的object配置项。
 */
 
-vdomRender('#app', {
+render('#app', {
 
     // 渲染数据:
 
@@ -90,7 +90,7 @@ let elem = ["div#app", [
 ```
 ## 在渲染方法中使用 ["render[name=*]", data]
 ```javascript
-import vdomRender from 'vdom-render';
+import render from 'jianaj-render';
 
 /* 
 ["render[name=*]", data]
@@ -101,7 +101,7 @@ import vdomRender from 'vdom-render';
 @data: data, 传递给被调用渲染方法的参数。如果data是数组，则遍历数组调用渲染方法。
 */
 
-vdomRender("#app", {
+render("#app", {
 
     options: {
         user: {
@@ -151,7 +151,7 @@ vdomRender("#app", {
 
 // 另一个例子， 当data是数组的时候：
 
-vdomRender("#app", {
+render("#app", {
     options: {
         items: [
             {text: "action"},
@@ -174,10 +174,10 @@ vdomRender("#app", {
 ```
 ## 定义组件render.widget()
 ```javascript
-import vdomRender from 'vdom-render';
+import render from 'jianaj-render';
 
 /* 
-vdomRender.widget(name, options)
+render.widget(name, options)
 ------------------------
 定义一个组件。
 
@@ -185,7 +185,7 @@ vdomRender.widget(name, options)
 @param: options, 包含renders['main']主方法的object配置项。
 */
 
-vdomRender.widget("helloworld", {
+render.widget("helloworld", {
     options: {        
         text: "Hello World"    
     },
@@ -203,7 +203,7 @@ vdomRender.widget("helloworld", {
 ```
 ## 在渲染方法中使用["widget[name=*]", data, children]
 ```javascript
-import vdomRender from 'vdom-render';
+import render from 'jianaj-render';
 
 /* 
 ["widget[name=*]", data, children]
@@ -217,7 +217,7 @@ import vdomRender from 'vdom-render';
 
 // 定义一个helloworld组件：
 
-vdomRender.widget("helloworld", {
+render.widget("helloworld", {
     options: {        
         text: "Hello World"    
     },
@@ -227,7 +227,7 @@ vdomRender.widget("helloworld", {
                 ["span", o.text],
 
                 // 接收处理default默认插槽。
-                ["slot[name=default]", function(s, o, w){
+                ["slot[name=default]", (s, o, w) => {
 
                     // s.data = {}, s.text = "", s.children = ["p", "this is p"]
 
@@ -235,7 +235,7 @@ vdomRender.widget("helloworld", {
                 }],
 
                 // 接收处理demo插槽。
-                ["slot[name=demo]", function(s, o, w){
+                ["slot[name=demo]", (s, o, w) => {
 
                     // s.data = {text: "demo"}, s.text = "", s.children = ["div", "demo"]
 
@@ -267,7 +267,7 @@ render("#app", {
                 ["div", "something else here"]
             ];
         },
-        hello: function(o, w){
+        hello(o, w){
 
             // 调用helloworld组件
             return [
@@ -293,7 +293,7 @@ render("#app", {
 ```
 ## 在渲染方法中使用["slot[name=*]"]
 ```javascript
-import vdomRender from 'vdom-render';
+import render from 'jianaj-render';
 
 /* 
 ["slot[name=*]", data, children]
@@ -319,7 +319,7 @@ render("#app", {
                 ["div", "something else here"]
             ];
         },
-        hello: function(o, w){
+        hello(o, w){
 
             // 调用helloworld组件
             return [
@@ -352,7 +352,7 @@ render("#app", {
 @handler: fn, 接收slot值，处理和返回处理结果。
 */
 
-vdomRender.widget("helloworld", {
+render.widget("helloworld", {
     options: {        
         text: "Hello World"    
     },
@@ -362,7 +362,7 @@ vdomRender.widget("helloworld", {
                 ["span", o.text],
 
                 // 接收处理default默认插槽。
-                ["slot[name=default]", function(s, o, w){
+                ["slot[name=default]", (s, o, w) => {
 
                     // s.data = {}, s.text = "", s.children = ["p", "this is p"]
 
@@ -370,7 +370,7 @@ vdomRender.widget("helloworld", {
                 }],
 
                 // 接收处理demo插槽。
-                ["slot[name=demo]", function(s, o, w){
+                ["slot[name=demo]", (s, o, w) => {
 
                     // s.data = {text: "demo"}, s.text = "", s.children = ["div", "demo"]
 

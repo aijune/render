@@ -1,6 +1,6 @@
-import $ from "../jquery";
-import Raw from "../raw";
-import Diff from "../diff";
+import $ from "../jquery/index";
+import Raw from "../raw/index";
+import Diff from "../diff/index";
 
 const proto = {
 
