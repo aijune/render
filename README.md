@@ -1,83 +1,127 @@
-# render.js
-Render Function && Virtual Dom
-## hyperscript
-```
-[selector] or
-[selector, data] or
-[selector, children] or
-[selector, child, child, child, ...]
-[selector, data, children] or
-[selector, data, child, child, child, ...]
+# vdom-render.js
+基于虚拟DOM技术的浏览器端渲染库。
+## 安装
+```shell script
+// npm:
+npm install vdom-render
+// yarn:
+yarn add vdom-render
+````
+## 引入和vdomRender()
+```javascript
+import vdomRender from 'vdom-render';
 
-1. <div></div>
-//-------------------------------
-["div"]
+/* 
+vdomRender(selector, options)
+-----------------------------
+渲染一个DOM元素。
 
-2. <div id="app"></div>
-//-------------------------------
-["div#app"] or 
-["div", {id: "app"}]
+@param: selector, 一个DOM元素或css3选择器。
+@param: options, 包含renders['main']主方法的object配置项。
+*/
 
-3. <div id="app" class="d-flex flex-row"></div>
-//-------------------------------
-["div#app.d-flex.flex-row"] or
-["div#app", {class: "d-flex flex-row"}] or
-["div", {id: "app", class: "d-flex flex-row"}]
+vdomRender('#app', {
 
-4. <div id="app" class="d-flex flex-row" style="display:none;">content</div>
-//-------------------------------
-["div#app.d-flex.flex-row[style=display:none;]", "content"] or
-["div#app.d-flex.flex-row", {style: "display:none;"}, "content"] or
-["div", {id: "app", class: "d-flex flex-row", style: "display:none;"}, "content"]
+    // 渲染数据:
 
-5. <div id="app"><h6>title</h6><p>text</p>...</div>
-//-------------------------------
-["div#app", ["h6", "title"], ["p", "text"], ...] or 
-["div#app", [
-    ["h6", "title"],
-    ["p", "text"],
-    ...
-]]
-```
-## render(selector, object)
-```
-render("#app", {
     options: {
-        text: "world"    
+        text: 'Hello World!'
     },
+    
+    // 渲染方法:
+
     renders: {
-        main: function(o, w){
-            return ["span", {
-                onclick: w._click
-            }, "hello " + o.text];
-        },
+        main (o, w){
+
+            // o: this.options渲染数据
+            // w: this整个对象
+
+            return ["this", {onclick: w._clickApp}, ['span', o.text]];
+        }
     },
-    _click: function(){
-        this._update({text: "render"});
+
+    // 其它方法:
+
+    _clickApp(){
+        this._update(o => {
+            o.text = 'Hello App!'
+        });
     }
 });
 ```
-## ["render[name=*]", data]
+
+## 采用纯js数据表达html
+
+```javascript
+// html: 
+let elem = '<div></div>';
+// render:
+let elem = ["div"];
+
+// html: 
+let elem = '<div id="app"></div>';
+// render:
+let elem = ["div#app"];
+let elem = ["div", {id: "app"}];
+
+// html: 
+let elem = '<div id="app" class="d-flex flex-row"></div>';
+// render:
+let elem = ["div#app.d-flex.flex-row"];
+let elem = ["div#app.d-flex", {class: "flex-row"}];
+let elem = ["div#app", {class: "d-flex flex-row"}];
+let elem = ["div", {id: "app", class: "d-flex flex-row"}];
+
+// html:
+let elem = '<div id="app" class="d-flex flex-row" style="display:none;">content</div>';
+// render:
+let elem = ["div#app.d-flex.flex-row[style=display:none;]", "content"];
+let elem = ["div#app.d-flex.flex-row", {style: "display:none;"}, "content"];
+let elem = ["div", {id: "app", class: "d-flex flex-row", style: "display:none;"}, "content"];
+
+// html:
+let elem = '<div id="app"><h6>title</h6><p>text</p></div>';
+// render:
+let elem = ["div#app", ["h6", "title"], ["p", "text"]];
+let elem = ["div#app", [
+               ["h6", "title"],
+               ["p", "text"]
+           ]];
 ```
-// data: object
-//-------------------------------
-render("#app", {
+## 在渲染方法中使用 ["render[name=*]", data]
+```javascript
+import vdomRender from 'vdom-render';
+
+/* 
+["render[name=*]", data]
+------------------------
+在一个渲染方法中调用另一个渲染方法。
+
+@attr: name, 被调用的渲染方法名称
+@data: data, 传递给被调用渲染方法的参数。如果data是数组，则遍历数组调用渲染方法。
+*/
+
+vdomRender("#app", {
+
     options: {
         user: {
             name: "user",
             email: "user@email.com"            
         }  
     },
+
     renders: {
-        main: function(o, w){
+        main(o, w){
             return ["this", {
                 onclick: w._clickApp
             },
-                [render[name=user], o.user],
+                // main方法中调用user方法    
+                ["render[name=user]", o.user],
+
                 ["div", "something else here"]
             ];
         },
-        user: function(user, o, w){
+        user(user, o, w){
             return ["div.user", {
                 onclick: w._clickUser    
             }, [
@@ -86,27 +130,28 @@ render("#app", {
             ]];
         }
     },
-    _clickApp: function(){
-        // diff and patch whole app, renders.main();
-        this._update(function(prevOptions){
-            prevOptions.user = {
+
+    _clickApp (){         
+        // 全局更新
+        this._update(o => {
+            o.user = {
                 name: "render",
                 email: "render@email.com"  
             }
         });
     },
-    _clickUser: function(e, raw){
-        // diff and patch only renders.user();
-        raw.update(function(prevUser){
-            prevUser.name = "render";
-            prevUser.email = "render@email.com";
+    _clickUser(e, raw){
+        // 局部更新 renders.user方法;
+        raw.update(user => {
+            user.name = "render";
+            user.email = "render@email.com";
         });
     }
 });
 
-// data: array
-//-------------------------------
-render("#app", {
+// 另一个例子， 当data是数组的时候：
+
+vdomRender("#app", {
     options: {
         items: [
             {text: "action"},
@@ -115,87 +160,229 @@ render("#app", {
         ]  
     },
     renders: {
-        main: function(o, w){
+        main(o, w){
             return ["ul", [
-               [render[name=item], o.items]
+                // o.items 是数组， item方法被遍历调用三次。
+                ["render[name=item]", o.items]
             ]];
         },
-        item: function(item, i, o, w){
+        item(item, i, o, w){
             return ["li", {key: i}, ["span", item.text]];
         }
     }
 });
 ```
-## ["widget[name=*]", data, children]
-```
-render("#app", {
+## 定义组件render.widget()
+```javascript
+import vdomRender from 'vdom-render';
+
+/* 
+vdomRender.widget(name, options)
+------------------------
+定义一个组件。
+
+@param: name, 组件名称
+@param: options, 包含renders['main']主方法的object配置项。
+*/
+
+vdomRender.widget("helloworld", {
+    options: {        
+        text: "Hello World"    
+    },
     renders: {
-        main: function(o, w){
-            return [
-                ["render[name=helloworld]"],                
-                ["div", "something else here"]
-            ];
+        main(o, w){
+            return ["span", { onclick: w._click}, o.text]
         },
-        helloworld: function(o, w){
-            return [widget[name=helloworld], {
-                text: "hello ~"
-            }, ["p", "this is p"]];
-        }
+    },
+    _click(e, raw) {
+        this._update(o => {
+            o.text = "Hello World";
+        });
     }
 });
 ```
-## ["slot[name=*]", data, children]
-```
-render("#app", { 
+## 在渲染方法中使用["widget[name=*]", data, children]
+```javascript
+import vdomRender from 'vdom-render';
+
+/* 
+["widget[name=*]", data, children]
+------------------------
+在一个渲染方法中调用组件。
+
+@attr: name, 被调用的组件名称
+@options: data, 传递给被调用组件的options。会覆盖组件默认options值。
+@slots: children, 传递给被调用组件的slots，组件通过["slot[name=*]"，fn]接收处理。
+*/
+
+// 定义一个helloworld组件：
+
+vdomRender.widget("helloworld", {
+    options: {        
+        text: "Hello World"    
+    },
+    renders: {
+        main(o, w){
+            return ["this", {onclick: w._click}, [
+                ["span", o.text],
+
+                // 接收处理default默认插槽。
+                ["slot[name=default]", function(s, o, w){
+
+                    // s.data = {}, s.text = "", s.children = ["p", "this is p"]
+
+                    return s.text || s.children;
+                }],
+
+                // 接收处理demo插槽。
+                ["slot[name=demo]", function(s, o, w){
+
+                    // s.data = {text: "demo"}, s.text = "", s.children = ["div", "demo"]
+
+                    return s.text || s.children;
+                }]            
+            ]];            
+        },
+    },
+    _click(e, raw) {
+        this._update(o => {
+            o.text = "Hello World";
+        });
+    }
+});
+
+// 调用helloworld组件:
+
+render("#app", {
     options: {
         demo: {text: "demo"}
     },  
     renders: {
-        main: function(o, w){
-            return [
-                ["render[name=helloworld]"],                
+        main(o, w){
+            return [  
+
+                // 调用hello渲染方法
+                ["render[name=hello]"],  
+              
                 ["div", "something else here"]
             ];
         },
-        helloworld: function(o, w){
-            return [widget[name=helloworld], {
-                text: "hello ~"
-            }, [
-                // use slot[name=default]
-                ["p", "this is p"],
-                // use solt[name=demo]
-                ["slot[name=demo]", o.demo, [
-                    ["div", "demo"]
-                ]] 
+        hello: function(o, w){
+
+            // 调用helloworld组件
+            return [
+                "widget[name=helloworld]", 
+
+                // options    
+                {text: "hello ~"}, 
+
+                // slots
+                [ 
+                    // 做为default默认插槽传给组件
+                    ["p", "this is p"],
+    
+                    // 做为demo插槽传给组件
+                    ["slot[name=demo]", o.demo, [
+                        ["div", "demo"]
+                    ]
+                ] 
             ]];
         }
     }
 });
 ```
-## render.widget(name, object)
-```
-render.widget("helloworld", {
-    options: {        
-        text: "hello world"    
-    },
+## 在渲染方法中使用["slot[name=*]"]
+```javascript
+import vdomRender from 'vdom-render';
+
+/* 
+["slot[name=*]", data, children]
+--------------------------------
+调用组件的时候，向组件传递一个具名插槽。
+
+@attr: name, 插槽名称
+@data: data, 传递给插槽的数据。
+@elems: children, 传递给插槽的DOM元素。
+*/
+
+render("#app", {
+    options: {
+        demo: {text: "demo"}
+    },  
     renders: {
-        main: function(o, w){
-            return [
-                ["span", {
-                    onclick: w._click
-                }, o.text],
-                // define slot[name=default]
-                ["slot[name=default]", function(s, o, w){
-                    // s.data = {}, s.text = "", s.children = ["p", "this is p"]
-                    return s.text || s.children;
-                }],
-                // define slot[name=demo]
-                ["slot[name=demo]", function(s, o, w){
-                    // s.data = {text: "demo"}, s.text = "", s.children = ["div", "demo"]
-                    return s.text || s.children;
-                }]
+        main(o, w){
+            return [  
+
+                // 调用hello渲染方法
+                ["render[name=hello]"],  
+              
+                ["div", "something else here"]
             ];
         },
+        hello: function(o, w){
+
+            // 调用helloworld组件
+            return [
+                "widget[name=helloworld]", 
+
+                // options    
+                {text: "hello ~"}, 
+
+                // slots
+                [ 
+                    // 做为default默认插槽传给组件
+                    ["p", "this is p"],
+    
+                    // 做为demo插槽传给组件
+                    ["slot[name=demo]", o.demo, [
+                        ["div", "demo"]
+                    ]
+                ] 
+            ]];
+        }
+    }
+});
+
+/* 
+["slot[name=*]", fn]
+----------------------
+组件对传递进来的slot做接收和处理。
+
+@attr: name, 传递进来的slot名称, 不通过具名slot传递进来的DOM元素归到slot[name=default]。
+@handler: fn, 接收slot值，处理和返回处理结果。
+*/
+
+vdomRender.widget("helloworld", {
+    options: {        
+        text: "Hello World"    
+    },
+    renders: {
+        main(o, w){
+            return ["this", {onclick: w._click}, [
+                ["span", o.text],
+
+                // 接收处理default默认插槽。
+                ["slot[name=default]", function(s, o, w){
+
+                    // s.data = {}, s.text = "", s.children = ["p", "this is p"]
+
+                    return s.text || s.children;
+                }],
+
+                // 接收处理demo插槽。
+                ["slot[name=demo]", function(s, o, w){
+
+                    // s.data = {text: "demo"}, s.text = "", s.children = ["div", "demo"]
+
+                    return s.text || s.children;
+                }]            
+            ]];            
+        },
+    },
+    _click(e, raw) {
+        this._update(o => {
+            o.text = "Hello World";
+        });
     }
 });
 ```
