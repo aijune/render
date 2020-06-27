@@ -111,7 +111,7 @@ Widget.prototype = {
     },
 
     _patch: function () {
-        this.diff.patch(this.oldRaw || this.defaultRaw, this.raw);
+        this.diff.patch(this.oldRaw || this.defaultRaw, this.raw, true);
         this.oldRaw = this.raw;
     },
 

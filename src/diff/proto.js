@@ -226,10 +226,11 @@ const proto = {
                     var name = e.type;
                     var events = handle.raw.data.events;
                     if (events && events[name]) {
-                        events[name](e, raw, oldRaw);
+                        events[name](e, handle.raw, handle.oldRaw);
                     }
                 };
                 handle.raw = raw;
+                handle.oldRaw = oldRaw;
                 $.each(events, function(key, value){
                     if(!oldEvents || !oldEvents[key]){
                         callbacks.add.call(that, node, key, handle);
@@ -588,7 +589,7 @@ const proto = {
         }
     },
 
-    patch: function(oldRaw, raw) {
+    patch: function(oldRaw, raw, isRoot) {
 
         if(!oldRaw && !raw){
             return;
@@ -596,14 +597,14 @@ const proto = {
 
         if(!oldRaw){
             raw.createQueue = [];
-            this.createNodeByRaw(raw, raw.createQueue, true);
+            this.createNodeByRaw(raw, raw.createQueue, isRoot);
         }
         else if(!raw){
             this.removeRaws([oldRaw], 0, 0);
         }
         else{
             raw.createQueue = [];
-            this.patchRaw(oldRaw, raw, raw.createQueue, true);
+            this.patchRaw(oldRaw, raw, raw.createQueue, isRoot);
 
             $.each(raw.createQueue, function(i, raw){
                 raw.data.hooks.create(raw);

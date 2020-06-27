@@ -586,12 +586,15 @@ const proto = {
             delay = window.requestAnimationFrame || window.setTimeout;
             delay(function () {
                 that.updating = false;
+
                 result = that.render.apply(that.widget, that.args);
                 result = that.formatVnode(result);
-                $.each(result, function (i, item) {
-                    raw = new that.constructor(item, that.widget, that);
-                    that.patchRaws([raw]);
-                });
+                if(result.length > 1){
+                    $.error("render update error: " + that.render);
+                }
+
+                raw = result[0] ? new that.constructor(result[0], that.widget, that) : null;
+                that.patchRaws(raw);
 
                 //--
 
@@ -603,16 +606,17 @@ const proto = {
         }
     },
 
-    patchRaws: function(raws){
+    patchRaws: function(raw){
         var that = this;
-        $.each(raws, function (i, raw) {
-            if(raw.tag === "render" || raw.tag === "slot"){
-                that.patchRaws(raw.children);
+        if(raw.tag === "render" || raw.tag === "slot"){
+            if(raw.children.length > 1){
+                $.error("render update error: " + that.render);
             }
-            else {
-                that.widget.diff.patch(that.renderTopRaw(raw), raw);
-            }
-        });
+            that.patchRaws(raw.children[0] || null);
+        }
+        else {
+            that.widget.diff.patch(that.renderTopRaw(raw), raw, false);
+        }
     },
 
     renderTopRaw: function (newRaw) {
@@ -900,10 +904,11 @@ const proto$1 = {
                     var name = e.type;
                     var events = handle.raw.data.events;
                     if (events && events[name]) {
-                        events[name](e, raw, oldRaw);
+                        events[name](e, handle.raw, handle.oldRaw);
                     }
                 };
                 handle.raw = raw;
+                handle.oldRaw = oldRaw;
                 $.each(events, function(key, value){
                     if(!oldEvents || !oldEvents[key]){
                         callbacks.add.call(that, node, key, handle);
@@ -1262,7 +1267,7 @@ const proto$1 = {
         }
     },
 
-    patch: function(oldRaw, raw) {
+    patch: function(oldRaw, raw, isRoot) {
 
         if(!oldRaw && !raw){
             return;
@@ -1270,14 +1275,14 @@ const proto$1 = {
 
         if(!oldRaw){
             raw.createQueue = [];
-            this.createNodeByRaw(raw, raw.createQueue, true);
+            this.createNodeByRaw(raw, raw.createQueue, isRoot);
         }
         else if(!raw){
             this.removeRaws([oldRaw], 0, 0);
         }
         else {
             raw.createQueue = [];
-            this.patchRaw(oldRaw, raw, raw.createQueue, true);
+            this.patchRaw(oldRaw, raw, raw.createQueue, isRoot);
 
             $.each(raw.createQueue, function(i, raw){
                 raw.data.hooks.create(raw);
@@ -1404,7 +1409,7 @@ Widget.prototype = {
     },
 
     _patch: function () {
-        this.diff.patch(this.oldRaw || this.defaultRaw, this.raw);
+        this.diff.patch(this.oldRaw || this.defaultRaw, this.raw, true);
         this.oldRaw = this.raw;
     },
 
