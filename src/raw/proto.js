@@ -1,4 +1,5 @@
 import $ from "../jquery/index";
+import {widgets} from "../widget/index";
 
 const proto = {
 
@@ -129,7 +130,7 @@ const proto = {
         var args = [];
 
         if($.isArray(value)){
-            args = widgetSlice.call(value, 1);
+            args = $.widgetSlice.call(value, 1);
             value = value[0];
         }
 
@@ -141,7 +142,7 @@ const proto = {
         if($.isFunction(value)){
             $.each(key.split(/,\s*/), function (i, k) {
                 data[k] = function () {
-                    return value.apply(that.widget, args.concat(widgetSlice.call(arguments, 0)));
+                    return value.apply(that.widget, args.concat($.widgetSlice.call(arguments, 0)));
                 };
             });
         }
@@ -281,7 +282,7 @@ const proto = {
             }
         };
 
-        if(!name || !render.widgets[name]){
+        if(!name || !widgets[name]){
             $.error("widget error: " + this.selector);
         }
 
@@ -309,24 +310,24 @@ const proto = {
             slot.children = result;
         });
 
-        this.tag = DCT.data.tag || render.widgets[name]["prototype"]["defaultTag"];
+        this.tag = DCT.data.tag || widgets[name]["prototype"]["defaultTag"];
         this.children = [];
         this.text = "";
         this.data = {
             hooks: {
                 create: function (raw) {
-                    var widget = new render.widgets[name](raw.node, DCT.data);
+                    new widgets[name](raw.node, DCT.data);
                 },
                 update: function (raw) {
                     var widget = $(raw.node).data("widgets-" + name);
                     if(widget){
-                        widget.update(DCT.data);
+                        widget._update(DCT.data);
                     }
                 },
                 destroy: function (raw) {
                     var widget = $(raw.node).data("widgets-" + name);
                     if(widget){
-                        widget.destroy(DCT.data);
+                        widget._destroy(DCT.data);
                     }
                 }
             }
@@ -433,10 +434,10 @@ const proto = {
         var delay, result, raw;
 
         if($.isFunction(value)){
-            value.call(this.widget, this.args[0]);
+            value.apply(this.widget, this.args);
         }
         else{
-            $.widgetExtend(this.args[0], value);
+            $.widgetExtend(this.args[this.args.length - 2], value);
         }
 
         if(callback){
@@ -459,7 +460,7 @@ const proto = {
                 //--
 
                 $.each(that.updateCallbacks, function (i, callback) {
-                    callback.call(that.widget, that.args[0]);
+                    callback.call(that.widget, that.args);
                 });
                 that.updateCallbacks = undefined;
             });
@@ -473,18 +474,23 @@ const proto = {
                 that.patchRaws(raw.children);
             }
             else{
-                that.widget.diff.patch(that.renderTopRaw(), raw);
+                that.widget.diff.patch(that.renderTopRaw(raw), raw);
             }
         });
     },
 
-    renderTopRaw: function () {
+    renderTopRaw: function (newRaw) {
         var raw = this;
         var parent = this.parent;
+        var index = $.inArray(raw, parent.children);
         while(parent.render === raw.render){
             raw = parent;
             parent = parent.parent;
+            index = $.inArray(raw, parent.children);
         }
+        newRaw.parent = parent;
+        parent.children.splice(index, 1, newRaw);
+
         return raw;
     }
 };

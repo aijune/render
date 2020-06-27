@@ -2,7 +2,10 @@ import $ from "../jquery/index";
 import Raw from "../raw/index";
 import Diff from "../diff/index";
 
-const proto = {
+const Widget = function() {};
+
+Widget._childConstructors = [];
+Widget.prototype = {
 
     widgetName: "widget",
 
@@ -68,7 +71,7 @@ const proto = {
         destroy = this._getHook("destroy");
         this.raw.data.hooks = this.raw.data.hooks || {};
         this.raw.data.hooks.destroy = function (raw, rm) {
-            that._destroy();
+            that._clearData();
             destroy ? destroy(raw, rm) : rm();
         };
     },
@@ -186,23 +189,17 @@ const proto = {
         }
     },
 
-    _destroy: function () {
+    _clearData: function(){
         $(this.node)
             .off(this.eventNamespace)
             .removeData(this.widgetName);
 
         this.bindings.off(this.eventNamespace);
-
-        $(this.node).empty();
     },
 
-    update: function (options) {
-        $.widgetExtend(this.options, options);
-        this._update();
-    },
-
-    destroy: function () {
-        this._destroy();
+    _destroy: function () {
+        this._clearData();
+        $(this.node).remove();
     },
 
     _on: function (element, handlers) {
@@ -218,26 +215,33 @@ const proto = {
         }
 
         $.each(handlers, function (event, handler) {
-            function handlerProxy(e) {
-                var raw, args = [e];
+            var args = [];
 
+            if($.isArray(handler)){
+                args = $.widgetSlice.call(handler, 1);
+                handler = handler[0];
+            }
+
+            function handlerProxy(e) {
+                var raw;
+
+                args.push(e);
                 if (raw = $(e.currentTarget).data("_raw_")) {
                     args.push(raw);
                 }
 
-                return (typeof handler === "string" ? instance[handler] : handler)
-                    .apply(instance, args);
+                return handler.apply(instance, args);
             }
 
-            if (typeof handler !== "string") {
-                handlerProxy.guid = handler.guid =
-                    handler.guid || handlerProxy.guid || $.guid++;
+            if(!$.isFunction(handler)){
+                return $.error("event error: " + handler);
             }
+
+            handlerProxy.guid = handler.guid = handler.guid || $.guid++;
 
             var match = event.match(/^([\w:-]*)\s*(.*)$/);
             var eventName = match[1] + instance.eventNamespace;
             var selector = match[2];
-
             if (selector) {
                 delegateElement.on(eventName, selector, handlerProxy);
             } else {
@@ -279,4 +283,4 @@ const proto = {
     }
 };
 
-export default proto;
+export default Widget;
