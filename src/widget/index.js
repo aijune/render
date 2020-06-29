@@ -2,6 +2,7 @@ import $ from "../jquery/index";
 import Widget from "./widget";
 
 export const widgets = {};
+
 export const widget = function( name, base, prototype ) {
     var constructor, basePrototype;
     var proxiedPrototype = {};
@@ -21,6 +22,7 @@ export const widget = function( name, base, prototype ) {
     };
 
     constructor._childConstructors = [];
+    constructor._parentConstructor = base;
     basePrototype = new base();
     basePrototype.options = $.widgetExtend( {}, basePrototype.options );
 

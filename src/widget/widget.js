@@ -3,9 +3,10 @@ import Raw from "../raw/index";
 import Diff from "../diff/index";
 
 const Widget = function() {};
-
 Widget._childConstructors = [];
 Widget.prototype = {
+
+    constructor: Widget,
 
     widgetName: "widget",
 

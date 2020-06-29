@@ -6,6 +6,7 @@ const render = function(element, widget, options){
     if(widget.renders){
         widget = render.widget("render" + $.widgetUuid++, widget);
     }
+
     new widget( element, options || {} );
 };
 

@@ -2,9 +2,9 @@
 基于虚拟DOM技术的浏览器端渲染库。
 ## 安装
 ```shell script
-// npm:
+# npm:
 npm install jianaj-render
-// yarn:
+# yarn:
 yarn add jianaj-render
 ````
 ## 引入和render()
