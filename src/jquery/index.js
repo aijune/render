@@ -42,4 +42,24 @@ $.widgetExtend = function( target ) {
     return target;
 };
 
+$.createRenderRoot = function(vnode, isMain){
+    var root = isMain ? "this" : "div";
+
+    if(vnode == null || typeof vnode === "boolean"){
+        return null;
+    }
+    else if($.isArray(vnode)){
+        if(typeof vnode[0] === "string"){
+            if (isMain && !/^this[#\.\[]*/.test(vnode[0])) {
+                vnode = [root, vnode];
+            }
+            return vnode;
+        }
+        return [root, vnode];
+    }
+    else{
+        return [root, String(vnode)];
+    }
+};
+
 export default $;

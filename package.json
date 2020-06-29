@@ -4,6 +4,7 @@
   "description": "Browser rendering Library Based on virtual DOM.",
   "main": "./dist/render.js",
   "scripts": {
+    "start": "webpack-dev-server --open",
     "build": "rollup --config"
   },
   "repository": {
@@ -27,6 +28,9 @@
     "jquery": "^3.5.1"
   },
   "devDependencies": {
-    "rollup": "^2.18.0"
+    "rollup": "^2.18.0",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.12",
+    "webpack-dev-server": "^3.11.0"
   }
 }

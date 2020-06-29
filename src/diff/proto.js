@@ -390,7 +390,6 @@ const proto = {
             raw = raws[startIdx];
 
             if(raw){
-
                 this.destroyChildren(raw.children);
 
                 rm = (function(raw, count){
@@ -555,10 +554,12 @@ const proto = {
             element.data("_raw_", raw);
         }
 
-        if(data.hooks && data.hooks.update){
-            data.hooks.update(raw, oldRaw);
+        if(!root || (root && !oldRaw.isSuperRaw)){
+            if(data.hooks && data.hooks.update){
+                data.hooks.update(raw, oldRaw);
+            }
+            this._hook("update", raw, oldRaw);
         }
-        this._hook("update", raw, oldRaw);
 
         if(data.remove){
             return this.removeRaws([raw], 0, 0);
@@ -589,7 +590,7 @@ const proto = {
         }
     },
 
-    patch: function(oldRaw, raw, isRoot) {
+    patch: function(oldRaw, raw, isWidgetRoot) {
 
         if(!oldRaw && !raw){
             return;
@@ -597,14 +598,14 @@ const proto = {
 
         if(!oldRaw){
             raw.createQueue = [];
-            this.createNodeByRaw(raw, raw.createQueue, isRoot);
+            this.createNodeByRaw(raw, raw.createQueue, isWidgetRoot);
         }
         else if(!raw){
             this.removeRaws([oldRaw], 0, 0);
         }
         else{
             raw.createQueue = [];
-            this.patchRaw(oldRaw, raw, raw.createQueue, isRoot);
+            this.patchRaw(oldRaw, raw, raw.createQueue, isWidgetRoot);
 
             $.each(raw.createQueue, function(i, raw){
                 raw.data.hooks.create(raw);

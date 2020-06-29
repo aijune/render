@@ -12,13 +12,13 @@ Widget.prototype = {
 
     defaultTag: "div",
 
-    diff: new Diff(),
-
     options: {
         slots: {}
     },
 
     renders: {},
+
+    _diff: new Diff(),
 
     _createWidget: function (element, options) {
         this.node = $(element)[0];
@@ -27,92 +27,77 @@ Widget.prototype = {
         this.bindings = $();
 
         $.data(this.node, "widgets-" + this.widgetName, this);
-
         this.options = $.widgetExtend({}, this.options, options);
+        if($.isFunction(this.renders)){
+            this.renders = {main: this.renders};
+        }
+
         this._create();
     },
 
     _create: function () {
-        var create;
+        var create, hooks;
 
         this._createRaw();
         this._mergeRaw();
         this._patch();
 
-        if (create = this._getHook("create")) {
-            create(this.raw);
+        if(this.raw){
+            hooks = this.raw.data.hooks = this.raw.data.hooks || {};
+            if (create = hooks.create) {
+                create(this.raw);
+            }
         }
     },
 
     _createRaw: function () {
         var that = this;
         var main = this.renders["main"];
-        var vnode, destroy;
+        var vnode, hooks, destroy;
 
         if (!$.isFunction(main)) {
             $.error("render error: main");
         }
 
         vnode = main.call(this, this.options, this);
-        if ($.isArray(vnode)) {
-            while ($.isArray(vnode[0])) {
-                vnode = vnode.length > 1 ? ["this", vnode] : vnode[0];
-            }
-            if (!/^this[#\.\[]*/.test(vnode[0])) {
-                vnode = ["this", vnode];
-            }
-        } else if (vnode != null && typeof vnode !== "boolean") {
-            vnode = ["this", String(vnode)];
-        } else {
-            return this.raw = null;
-        }
+        vnode = $.createRenderRoot(vnode, true);
 
-        this.raw = new Raw(vnode, this);
-
-        destroy = this._getHook("destroy");
-        this.raw.data.hooks = this.raw.data.hooks || {};
-        this.raw.data.hooks.destroy = function (raw, rm) {
-            that._clearData();
-            destroy ? destroy(raw, rm) : rm();
-        };
-    },
-
-    _getHook: function (name) {
-        var hook;
-        if (this.raw &&
-            (hook = this.raw.data.hooks) &&
-            (hook = this.raw.data.hooks[name])) {
-            return hook;
-        } else {
-            return null;
+        this.raw = vnode == null ? null : new Raw(vnode, this);
+        if(this.raw){
+            hooks = this.raw.data.hooks = this.raw.data.hooks || {};
+            destroy = hooks.destroy;
+            hooks.destroy = function (raw, rm) {
+                that._clearData();
+                destroy ? destroy(raw, rm) : rm();
+            };
         }
     },
 
     _mergeRaw: function () {
-        var element;
+        var element = $(this.node);
+
+        if (!this.superRaw) {
+            this.superRaw = element.data("_raw_") || this._diff.createRawByNode(this.node, this);
+            this.superRaw.isSuperRaw = true;
+        }
 
         if (this.raw) {
-            element = $(this.node);
             this.raw.tag = element.prop("tagName").toLowerCase();
 
-            if (!this.defaultRaw) {
-                this.defaultRaw = element.data("_raw_") || this.diff.createRawByNode(this.node, this);
+            if (this.superRaw.data.style) {
+                this.raw.data.style = $.widgetExtend({}, this.superRaw.data.style, this.raw.data.style);
             }
-
-            if (this.defaultRaw.data.style) {
-                this.raw.data.style = $.widgetExtend({}, this.defaultRaw.data.style, this.raw.data.style);
+            if (this.superRaw.data.class) {
+                this.raw.data.class = $.widgetExtend({}, this.superRaw.data.class, this.raw.data.class);
             }
-            if (this.defaultRaw.data.class) {
-                this.raw.data.class = $.widgetExtend({}, this.defaultRaw.data.class, this.raw.data.class);
-            }
-            if (this.defaultRaw.data.attrs) {
-                this.raw.data.attrs = $.widgetExtend({}, this.defaultRaw.data.attrs, this.raw.data.attrs);
+            if (this.superRaw.data.attrs) {
+                this.raw.data.attrs = $.widgetExtend({}, this.superRaw.data.attrs, this.raw.data.attrs);
             }
         }
     },
 
     _patch: function () {
-        this.diff.patch(this.oldRaw || this.defaultRaw, this.raw, true);
+        this._diff.patch(this.oldRaw || this.superRaw, this.raw, true);
         this.oldRaw = this.raw;
     },
 
