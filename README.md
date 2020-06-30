@@ -373,3 +373,48 @@ render.widget("helloworld", {
     }
 });
 ```
+## 使用jquery
+```javascript
+import render from 'jianaj-render';
+import select2 from 'select2';
+
+const $ = render.jquery;
+
+render("#app", {
+    renders: {
+        main(o, w){
+            // "this" 指代挂载元素。
+            return ["this", {
+                oncreate(){
+                    $.ajax({
+                        ...
+                    }).then(res => {
+                        w._update();
+                    });
+                }                      
+            }, [
+                ["div", "this is div"],
+                ["select", {
+                    "oncreate,onupdate,ondestroy": w.setSelect
+                }]
+            ]];
+        }
+    },
+    
+    setSelect(raw, rm){
+        // create
+        if(!rm){ 
+            $(raw.node).select2({...});
+        }
+        // update
+        else if(!$.isFunction(rm)){
+            $(raw.node).select2("update", {...});
+        } 
+        // destroy
+        else{
+            $(raw.node).select2("destroy");
+            rm();    
+        }   
+    }
+});
+```
