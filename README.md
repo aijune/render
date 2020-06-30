@@ -36,13 +36,13 @@ render('#app', {
             // o: this.options渲染数据
             // w: this整个对象
 
-            return ["this", {onclick: w._clickApp}, ['span', o.text]];
+            return ["this", {onclick: w.clickApp}, ['span', o.text]];
         }
     },
 
     // 其它方法:
 
-    _clickApp(){
+    clickApp(){
         this._update(o => {
             o.text = 'Hello App!'
         });
@@ -112,9 +112,7 @@ render("#app", {
 
     renders: {
         main(o, w){
-            return ["this", {
-                onclick: w._clickApp
-            },
+            return ["this", 
                 // main方法中调用user方法    
                 ["render[name=user]", o.user],
 
@@ -123,29 +121,18 @@ render("#app", {
         },
         user(user, o, w){
             return ["div.user", {
-                onclick: w._clickUser    
+                onclick: [w.clickUser, user]   
             }, [
                ["div.name", user.name],
                ["div.email", user.email]
             ]];
         }
     },
-
-    _clickApp (){         
-        // 全局更新
-        this._update(o => {
-            o.user = {
-                name: "render",
-                email: "render@email.com"  
-            }
-        });
-    },
-    _clickUser(e, raw){
-        // 局部更新 renders.user方法;
-        raw.update(user => {
-            user.name = "render";
-            user.email = "render@email.com";
-        });
+    
+    clickUser(user, e, raw){       
+        user.email = "render@email.com";
+        // 更新
+        raw.update();
     }
 });
 
@@ -358,7 +345,7 @@ render.widget("helloworld", {
     },
     renders: {
         main(o, w){
-            return ["this", {onclick: w._click}, [
+            return ["this", {onclick: w.click}, [
                 ["span", o.text],
 
                 // 接收处理default默认插槽。
@@ -379,7 +366,7 @@ render.widget("helloworld", {
             ]];            
         },
     },
-    _click(e, raw) {
+    click(e, raw) {
         this._update(o => {
             o.text = "Hello World";
         });
