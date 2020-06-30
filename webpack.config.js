@@ -1,13 +1,20 @@
 const path = require('path');
 
 module.exports = {
-    entry: './demo/index.js',
+    entry: {
+        render: './demo/render.js',
+        sel: './demo/sel.js',
+        raw: './demo/raw.js'
+    },
     output: {
-        path: path.resolve(__dirname, 'dist'),
-        filename: 'index.bundle.js'
+        path: path.resolve(__dirname, 'demo'),
+        filename: '[name].bundle.js'
     },
     devServer: {
-        contentBase: './demo'
+        contentBase: './demo',
+        // openPage: 'render.html',
+        // openPage: 'sel.html',
+        openPage: 'raw.html',
     },
     resolve: {
         alias: {

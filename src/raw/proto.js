@@ -431,7 +431,7 @@ const proto = {
 
     update: function(value, callback){
         var that = this;
-        var delay, result, raw;
+        var delay, result, parent, raw = [];
 
         if($.isFunction(value)){
             value.apply(this.widget, this.args);
@@ -453,8 +453,43 @@ const proto = {
 
                 result = that.render.apply(that.widget, that.args);
                 result = that.formatVnode(result);
+                parent = that.getSingleParent();
+                /*newParent = $
+
+
+
+
+                setRenderItem: function(render, args, notRaw){
+                    var that = this;
+                    var result = render.apply(this.widget, args);
+                    var raw, parent;
+
+                    result = this.formatVnode(result);
+                    if(notRaw){
+                        return result;
+                    }
+
+                    this.render = render;
+                    this.args = args;
+                    $.each(result, function (i, item) {
+                        raw = new that.constructor(item, that.widget, that);
+                        if(raw.tag !== "render" && raw.tag !== "slot"){
+                            parent = that.parent;
+                            while (parent.tag === "render" || parent.tag === "slot"){
+                                parent = parent.parent;
+                            }
+                            raw.parent = parent;
+                            parent.children.push(raw);
+                        }
+                    });
+                },*/
+
+                /*$.each(result, function (i, item) {
+                    raw.push()
+                });*/
+
                 if(result.length > 1){
-                    $.error("render update error: " + that.render);
+                    $.error("render error: update must be a single root, " + that.render);
                 }
 
                 raw = result[0] ? new that.constructor(result[0], that.widget, that) : null;
@@ -474,28 +509,39 @@ const proto = {
         var that = this;
         if(raw.tag === "render" || raw.tag === "slot"){
             if(raw.children.length > 1){
-                $.error("render update error: " + that.render);
+                $.error("render update error: update must be a single root, " + that.render);
             }
             that.patchRaws(raw.children[0] || null);
         }
         else{
-            that.widget.diff.patch(that.renderTopRaw(raw), raw, false);
+            that.widget._diff.patch(that.renderTopRaw(raw), raw, false);
         }
     },
 
-    renderTopRaw: function (newRaw) {
+    getSingleParent: function(){
         var raw = this;
-        var parent = this.parent;
-        var index = $.inArray(raw, parent.children);
+        var parent = raw.parent;
         while(parent.render === raw.render){
             raw = parent;
             parent = parent.parent;
-            index = $.inArray(raw, parent.children);
         }
-        newRaw.parent = parent;
-        parent.children.splice(index, 1, newRaw);
+        return parent;
+    },
 
-        return raw;
+    getRenderRaw: function (raw) {
+        var that = this;
+        var parent = this.parent;
+        var index = $.inArray(this, parent.children);
+        while(parent.render === that.render){
+            that = parent;
+            parent = parent.parent;
+            index = $.inArray(that, parent.children);
+        }
+
+        raw.parent = parent;
+        parent.children.splice(index, 1, raw);
+
+        return that;
     }
 };
 
