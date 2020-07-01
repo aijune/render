@@ -1,6 +1,6 @@
 {
   "name": "jianaj-render",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Browser rendering Library Based on virtual DOM.",
   "main": "./dist/render.js",
   "scripts": {
