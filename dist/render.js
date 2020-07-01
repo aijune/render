@@ -42,6 +42,26 @@ $.widgetExtend = function( target ) {
     return target;
 };
 
+$.createRenderRoot = function(vnode, isMain){
+    var root = isMain ? "this" : "div";
+
+    if(vnode == null || typeof vnode === "boolean"){
+        return null;
+    }
+    else if($.isArray(vnode)){
+        if(typeof vnode[0] === "string"){
+            if (isMain && !/^this[#\.\[]*/.test(vnode[0])) {
+                vnode = [root, vnode];
+            }
+            return vnode;
+        }
+        return [root, vnode];
+    }
+    else {
+        return [root, String(vnode)];
+    }
+};
+
 const Sel$1 = {
 
     parser: /(?:(^|#|\.)([^#\.\[\]]+))|(\[(.+?)(?:\s*=\s*("|'|)((?:\\["'\]]|.)*?)\5)?\])/g,
@@ -56,6 +76,7 @@ const Sel$1 = {
         }
 
         while (match = this.parser.exec(selector)){
+            var attrValue;
             var type = match[1], value = match[2];
             if (type === "" && value !== "") {
                 tag = value;
@@ -63,7 +84,7 @@ const Sel$1 = {
             else if (type === "#") data.id = value;
             else if (type === ".") classes.push(value);
             else if (match[3][0] === "[") {
-                var attrValue = match[6];
+                attrValue = match[6];
                 if (attrValue) attrValue = attrValue.replace(/\\(["'])/g, "$1").replace(/\\\\/g, "\\");
                 if (match[4] === "class") classes.push(attrValue);
                 else data[match[4]] = attrValue === "" ? attrValue : attrValue || true;
@@ -76,6 +97,7 @@ const Sel$1 = {
 };
 
 const widgets = {};
+
 const widget = function( name, base, prototype ) {
     var constructor, basePrototype;
     var proxiedPrototype = {};
@@ -95,6 +117,7 @@ const widget = function( name, base, prototype ) {
     };
 
     constructor._childConstructors = [];
+    constructor._parentConstructor = base;
     basePrototype = new base();
     basePrototype.options = $.widgetExtend( {}, basePrototype.options );
 
@@ -563,75 +586,6 @@ const proto = {
         $.each(children, function (i, child){
             child.addNS(child.data, child.children);
         });
-    },
-
-    update: function(value, callback){
-        var that = this;
-        var delay, result, raw;
-
-        if($.isFunction(value)){
-            value.apply(this.widget, this.args);
-        }
-        else {
-            $.widgetExtend(this.args[this.args.length - 2], value);
-        }
-
-        if(callback){
-            this.updateCallbacks = this.updateCallbacks || [];
-            this.updateCallbacks.push(callback);
-        }
-
-        if(!this.updating){
-            this.updating = true;
-            delay = window.requestAnimationFrame || window.setTimeout;
-            delay(function () {
-                that.updating = false;
-
-                result = that.render.apply(that.widget, that.args);
-                result = that.formatVnode(result);
-                if(result.length > 1){
-                    $.error("render update error: " + that.render);
-                }
-
-                raw = result[0] ? new that.constructor(result[0], that.widget, that) : null;
-                that.patchRaws(raw);
-
-                //--
-
-                $.each(that.updateCallbacks, function (i, callback) {
-                    callback.call(that.widget, that.args);
-                });
-                that.updateCallbacks = undefined;
-            });
-        }
-    },
-
-    patchRaws: function(raw){
-        var that = this;
-        if(raw.tag === "render" || raw.tag === "slot"){
-            if(raw.children.length > 1){
-                $.error("render update error: " + that.render);
-            }
-            that.patchRaws(raw.children[0] || null);
-        }
-        else {
-            that.widget.diff.patch(that.renderTopRaw(raw), raw, false);
-        }
-    },
-
-    renderTopRaw: function (newRaw) {
-        var raw = this;
-        var parent = this.parent;
-        var index = $.inArray(raw, parent.children);
-        while(parent.render === raw.render){
-            raw = parent;
-            parent = parent.parent;
-            index = $.inArray(raw, parent.children);
-        }
-        newRaw.parent = parent;
-        parent.children.splice(index, 1, newRaw);
-
-        return raw;
     }
 };
 
@@ -1068,7 +1022,6 @@ const proto$1 = {
             raw = raws[startIdx];
 
             if(raw){
-
                 this.destroyChildren(raw.children);
 
                 rm = (function(raw, count){
@@ -1233,10 +1186,12 @@ const proto$1 = {
             element.data("_raw_", raw);
         }
 
-        if(data.hooks && data.hooks.update){
-            data.hooks.update(raw, oldRaw);
+        if(!root || (root && !oldRaw.isSuperRaw)){
+            if(data.hooks && data.hooks.update){
+                data.hooks.update(raw, oldRaw);
+            }
+            this._hook("update", raw, oldRaw);
         }
-        this._hook("update", raw, oldRaw);
 
         if(data.remove){
             return this.removeRaws([raw], 0, 0);
@@ -1267,7 +1222,7 @@ const proto$1 = {
         }
     },
 
-    patch: function(oldRaw, raw, isRoot) {
+    patch: function(oldRaw, raw, isWidgetRoot) {
 
         if(!oldRaw && !raw){
             return;
@@ -1275,14 +1230,14 @@ const proto$1 = {
 
         if(!oldRaw){
             raw.createQueue = [];
-            this.createNodeByRaw(raw, raw.createQueue, isRoot);
+            this.createNodeByRaw(raw, raw.createQueue, isWidgetRoot);
         }
         else if(!raw){
             this.removeRaws([oldRaw], 0, 0);
         }
         else {
             raw.createQueue = [];
-            this.patchRaw(oldRaw, raw, raw.createQueue, isRoot);
+            this.patchRaw(oldRaw, raw, raw.createQueue, isWidgetRoot);
 
             $.each(raw.createQueue, function(i, raw){
                 raw.data.hooks.create(raw);
@@ -1301,21 +1256,22 @@ Diff.prototype = {
 };
 
 const Widget = function() {};
-
 Widget._childConstructors = [];
 Widget.prototype = {
+
+    constructor: Widget,
 
     widgetName: "widget",
 
     defaultTag: "div",
-
-    diff: new Diff(),
 
     options: {
         slots: {}
     },
 
     renders: {},
+
+    _diff: new Diff(),
 
     _createWidget: function (element, options) {
         this.node = $(element)[0];
@@ -1324,92 +1280,77 @@ Widget.prototype = {
         this.bindings = $();
 
         $.data(this.node, "widgets-" + this.widgetName, this);
-
         this.options = $.widgetExtend({}, this.options, options);
+        if($.isFunction(this.renders)){
+            this.renders = {main: this.renders};
+        }
+
         this._create();
     },
 
     _create: function () {
-        var create;
+        var create, hooks;
 
         this._createRaw();
         this._mergeRaw();
         this._patch();
 
-        if (create = this._getHook("create")) {
-            create(this.raw);
+        if(this.raw){
+            hooks = this.raw.data.hooks = this.raw.data.hooks || {};
+            if (create = hooks.create) {
+                create(this.raw);
+            }
         }
     },
 
     _createRaw: function () {
         var that = this;
         var main = this.renders["main"];
-        var vnode, destroy;
+        var vnode, hooks, destroy;
 
         if (!$.isFunction(main)) {
             $.error("render error: main");
         }
 
         vnode = main.call(this, this.options, this);
-        if ($.isArray(vnode)) {
-            while ($.isArray(vnode[0])) {
-                vnode = vnode.length > 1 ? ["this", vnode] : vnode[0];
-            }
-            if (!/^this[#\.\[]*/.test(vnode[0])) {
-                vnode = ["this", vnode];
-            }
-        } else if (vnode != null && typeof vnode !== "boolean") {
-            vnode = ["this", String(vnode)];
-        } else {
-            return this.raw = null;
-        }
+        vnode = $.createRenderRoot(vnode, true);
 
-        this.raw = new Raw(vnode, this);
-
-        destroy = this._getHook("destroy");
-        this.raw.data.hooks = this.raw.data.hooks || {};
-        this.raw.data.hooks.destroy = function (raw, rm) {
-            that._clearData();
-            destroy ? destroy(raw, rm) : rm();
-        };
-    },
-
-    _getHook: function (name) {
-        var hook;
-        if (this.raw &&
-            (hook = this.raw.data.hooks) &&
-            (hook = this.raw.data.hooks[name])) {
-            return hook;
-        } else {
-            return null;
+        this.raw = vnode == null ? null : new Raw(vnode, this);
+        if(this.raw){
+            hooks = this.raw.data.hooks = this.raw.data.hooks || {};
+            destroy = hooks.destroy;
+            hooks.destroy = function (raw, rm) {
+                that._clearData();
+                destroy ? destroy(raw, rm) : rm();
+            };
         }
     },
 
     _mergeRaw: function () {
-        var element;
+        var element = $(this.node);
+
+        if (!this.superRaw) {
+            this.superRaw = element.data("_raw_") || this._diff.createRawByNode(this.node, this);
+            this.superRaw.isSuperRaw = true;
+        }
 
         if (this.raw) {
-            element = $(this.node);
             this.raw.tag = element.prop("tagName").toLowerCase();
 
-            if (!this.defaultRaw) {
-                this.defaultRaw = element.data("_raw_") || this.diff.createRawByNode(this.node, this);
+            if (this.superRaw.data.style) {
+                this.raw.data.style = $.widgetExtend({}, this.superRaw.data.style, this.raw.data.style);
             }
-
-            if (this.defaultRaw.data.style) {
-                this.raw.data.style = $.widgetExtend({}, this.defaultRaw.data.style, this.raw.data.style);
+            if (this.superRaw.data.class) {
+                this.raw.data.class = $.widgetExtend({}, this.superRaw.data.class, this.raw.data.class);
             }
-            if (this.defaultRaw.data.class) {
-                this.raw.data.class = $.widgetExtend({}, this.defaultRaw.data.class, this.raw.data.class);
-            }
-            if (this.defaultRaw.data.attrs) {
-                this.raw.data.attrs = $.widgetExtend({}, this.defaultRaw.data.attrs, this.raw.data.attrs);
+            if (this.superRaw.data.attrs) {
+                this.raw.data.attrs = $.widgetExtend({}, this.superRaw.data.attrs, this.raw.data.attrs);
             }
         }
     },
 
     _patch: function () {
-        this.diff.patch(this.oldRaw || this.defaultRaw, this.raw, true);
+        this._diff.patch(this.oldRaw || this.superRaw, this.raw, true);
         this.oldRaw = this.raw;
     },
 
@@ -1521,14 +1462,8 @@ Widget.prototype = {
             }
 
             function handlerProxy(e) {
-                var raw;
-
-                args.push(e);
-                if (raw = $(e.currentTarget).data("_raw_")) {
-                    args.push(raw);
-                }
-
-                return handler.apply(instance, args);
+                var raw = $(e.currentTarget).data("_raw_");
+                return handler.apply(instance, args.concat([e, raw]));
             }
 
             if(!$.isFunction(handler)){
@@ -1585,6 +1520,7 @@ const render = function(element, widget, options){
     if(widget.renders){
         widget = render.widget("render" + $.widgetUuid++, widget);
     }
+
     new widget( element, options || {} );
 };
 
