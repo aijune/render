@@ -209,14 +209,8 @@ Widget.prototype = {
             }
 
             function handlerProxy(e) {
-                var raw;
-
-                args.push(e);
-                if (raw = $(e.currentTarget).data("_raw_")) {
-                    args.push(raw);
-                }
-
-                return handler.apply(instance, args);
+                var raw = $(e.currentTarget).data("_raw_");
+                return handler.apply(instance, args.concat([e, raw]));
             }
 
             if(!$.isFunction(handler)){
